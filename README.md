@@ -1,5 +1,5 @@
 # Shrimp
-[![Build Status](https://travis-ci.org/adeven/shrimp.png)](https://travis-ci.org/adeven/shrimp)
+[![Build Status](https://travis-ci.org/adeven/shrimp.png?branch=master)](https://travis-ci.org/adeven/shrimp)
 Creates PDFs from URLs using phantomjs
 
 ## Installation
