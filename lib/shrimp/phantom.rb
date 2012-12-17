@@ -1,3 +1,5 @@
+require 'uri'
+require 'json'
 module Shrimp
   class NoExecutableError < StandardError
     def initialize
