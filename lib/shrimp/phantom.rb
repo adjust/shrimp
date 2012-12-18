@@ -15,17 +15,39 @@ module Shrimp
     end
   end
 
+  class RenderingError < StandardError
+    def initialize(msg = nil)
+      super("Rendering Error: #{msg}")
+    end
+  end
 
   class Phantom
     attr_accessor :source, :configuration, :outfile
-    attr_reader :options, :cookies
+    attr_reader :options, :cookies, :result, :error
     SCRIPT_FILE = File.expand_path('../rasterize.js', __FILE__)
 
     # Public: Runs the phantomjs binary
     #
     # Returns the stdout output of phantomjs
     def run
+      @error  = nil
       @result = `#{cmd}`
+      unless $?.exitstatus == 0
+        @error  = @result
+        @result = nil
+      end
+      @result
+    end
+
+    def run!
+      @error  = nil
+      @result = `#{cmd}`
+      unless $?.exitstatus == 0
+        @error  = @result
+        @result = nil
+        raise RenderingError.new(@error)
+      end
+      @result
     end
 
     # Public: Returns the phantom rasterize command
@@ -53,7 +75,7 @@ module Shrimp
       @source  = Source.new(url_or_file)
       @options = Shrimp.configuration.default_options.merge(options)
       @cookies = cookies
-      @outfile = outfile
+      @outfile = File.expand_path(outfile) if outfile
       raise NoExecutableError.new unless File.exists?(Shrimp.configuration.phantomjs)
     end
 
@@ -62,7 +84,7 @@ module Shrimp
     #
     # Returns the path to the pdf file
     def to_pdf(path=nil)
-      @outfile = path
+      @outfile = File.expand_path(path) if path
       self.run
       @outfile
     end
@@ -81,8 +103,22 @@ module Shrimp
     #
     # Returns the binary string of the pdf
     def to_string(path=nil)
-      self.to_pdf(path)
-      File.open(path).read
+      File.open(self.to_pdf(path)).read
+    end
+
+    def to_pdf!(path=nil)
+      @outfile = File.expand_path(path) if path
+      self.run!
+      @outfile
+    end
+
+    def to_file!(path=nil)
+      self.to_pdf!(path)
+      File.new(@outfile)
+    end
+
+    def to_string!(path=nil)
+      File.open(self.to_pdf!(path)).read
     end
 
     private

@@ -24,14 +24,16 @@ Or install it yourself as:
 ## Usage
 
 ```
+require 'shrimp'
 url     = 'http://www.google.com'
 options = { :margin => "1cm"}
-Phantomjs::Phantomjs.new(url, options).to_pdf("/output.pdf")
+Shrimp::Phantom.new(url, options).to_pdf("~/output.pdf")
 ```
 ## Configuration
 
 ```
 Shrimp.configure do |config|
+
   # The path to the phantomjs executable
   # defaults to `where phantomjs`
   # config.phantomjs = '/usr/local/bin/phantomjs'
@@ -42,8 +44,8 @@ Shrimp.configure do |config|
 
   # the default margin
   # config.margin           = '1cm'
-  # the zoom factor
 
+  # the zoom factor
   # config.zoom             = 1
 
   # the page orientation 'portrait' or 'landscape'
@@ -52,11 +54,13 @@ Shrimp.configure do |config|
   # a temporary dir used to store tempfiles
   # config.tmpdir           = Dir.tmpdir
 
-  # the timeout for phantomjs rendering process
-  # rendering_timeout       = 90000
-
-  # the default rendering time
+  # the default rendering time in ms
+  # increase if you need to render very complex pages
   # config.rendering_time   = 1000
+
+  # the timeout for the phantomjs rendering process in ms
+  # this needs always to be higher than rendering_time
+  # config.rendering_timeout       = 90000
 end
 ```
 
@@ -76,7 +80,7 @@ Shrimp comes with a middleware that allows users to get a PDF view of any page o
 
     # in application.rb(Rails3) or environment.rb(Rails2)
     require 'shrimp'
-    config.middleware.use PDFKit::Middleware
+    config.middleware.use Shrimp::Middleware
 
 **With Shrimp options**
 
@@ -109,9 +113,9 @@ you can setup the polling interval and the polling offset in seconds.
 
 ### Caching
 
-To avoid rendering the page on each request you can setup some the cache ttl on seconds
+To avoid rendering the page on each request you can setup some the cache ttl in seconds
 
-    config.middleware.use Shrimp::Middleware, :cache_ttl => 3600 # one hour
+    config.middleware.use Shrimp::Middleware, :cache_ttl => 3600, :out_path => "my/pdf/store"
 
 
 ### Ajax requests
@@ -126,7 +130,7 @@ To include some fancy Ajax stuff with jquery
         return window.location.assign(url);
       },
       504: function() {
-       console.log("Shit's beeing wired"
+       console.log("Shit's beeing wired")
       },
       503: function(jqXHR, textStatus, errorThrown) {
         var wait;

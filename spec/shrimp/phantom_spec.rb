@@ -99,4 +99,37 @@ describe Shrimp::Phantom do
       valid_pdf(@result)
     end
   end
+
+  context "Error" do
+    it "should return result nil" do
+      phantom = Shrimp::Phantom.new("file://foo/bar")
+      @result = phantom.run
+      @result.should be_nil
+    end
+
+    it "should be unable to load the address" do
+      phantom = Shrimp::Phantom.new("file:///foo/bar")
+      phantom.run
+      phantom.error.should include "Unable to load the address"
+    end
+
+    it "should be unable to copy file" do
+      phantom = Shrimp::Phantom.new("file://#{testfile}")
+      phantom.to_pdf("/foo/bar/")
+      phantom.error.should include "Unable to copy file "
+    end
+  end
+
+  context "Error Bang!" do
+
+    it "should be unable to load the address" do
+      phantom = Shrimp::Phantom.new("file:///foo/bar")
+      expect { phantom.run! }.to raise_error Shrimp::RenderingError
+    end
+
+    it "should be unable to copy file" do
+      phantom = Shrimp::Phantom.new("file://#{testfile}")
+      expect { phantom.to_pdf!("/foo/bar/") }.to raise_error Shrimp::RenderingError
+    end
+  end
 end

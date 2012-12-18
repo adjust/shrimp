@@ -1,3 +1,4 @@
+require 'tmpdir'
 module Shrimp
   class Configuration
     attr_accessor :default_options
