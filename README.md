@@ -2,6 +2,8 @@
 [![Build Status](https://travis-ci.org/adeven/shrimp.png?branch=master)](https://travis-ci.org/adeven/shrimp)
 Creates PDFs from URLs using phantomjs
 
+Read our [blogpost](http://big-elephants.com/2012-12/pdf-rendering-with-phantomjs/) about how it works.
+
 ## Installation
 
 Add this line to your application's Gemfile:
