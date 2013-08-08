@@ -25,8 +25,7 @@ describe Shrimp::Phantom do
   end
 
   it "should initialize attributes" do
-    phantom = Shrimp::Phantom.new(Shrimp.configuration.phantomjs, 
-                                  "file://#{testfile}", { :margin => "2cm" }, 
+    phantom = Shrimp::Phantom.new("file://#{testfile}", { :margin => "2cm" }, 
                                   { }, "#{Dir.tmpdir}/test.pdf")
     phantom.source.to_s.should eq "file://#{testfile}"
     phantom.options[:margin].should eq "2cm"
@@ -39,20 +38,17 @@ describe Shrimp::Phantom do
   end
 
   it "should accept a local file url" do
-    phantom = Shrimp::Phantom.new(Shrimp.configuration.phantomjs, 
-                                  "file://#{testfile}")
+    phantom = Shrimp::Phantom.new("file://#{testfile}")
     phantom.source.should be_url
   end
 
   it "should accept a URL as source" do
-    phantom = Shrimp::Phantom.new(Shrimp.configuration.phantomjs, 
-                                  "http://google.com")
+    phantom = Shrimp::Phantom.new("http://google.com")
     phantom.source.should be_url
   end
 
   it "should parse options into a cmd line" do
-    phantom = Shrimp::Phantom.new(Shrimp.configuration.phantomjs, 
-                                  "file://#{testfile}", 
+    phantom = Shrimp::Phantom.new("file://#{testfile}", 
                                   { format: 'Letter', margin: "2cm" }, 
                                   { }, "#{Dir.tmpdir}/test.pdf")
     phantom.cmd.should include "test.pdf Letter 1 2cm portrait"
@@ -62,8 +58,7 @@ describe Shrimp::Phantom do
 
   context "rendering to a file" do
     before(:all) do
-      phantom = Shrimp::Phantom.new(Shrimp.configuration.phantomjs, 
-                                    "file://#{testfile}", { :margin => "2cm" }, 
+      phantom = Shrimp::Phantom.new("file://#{testfile}", { :margin => "2cm" }, 
                                     { }, "#{Dir.tmpdir}/test.pdf")
       @result = phantom.to_file
     end
@@ -79,8 +74,7 @@ describe Shrimp::Phantom do
 
   context "rendering to a pdf" do
     before(:all) do
-      @phantom = Shrimp::Phantom.new(Shrimp.configuration.phantomjs, 
-                                     "file://#{testfile}", { :margin => "2cm" }, 
+      @phantom = Shrimp::Phantom.new("file://#{testfile}", { :margin => "2cm" }, 
                                      { })
       @result  = @phantom.to_pdf("#{Dir.tmpdir}/test.pdf")
     end
@@ -97,8 +91,7 @@ describe Shrimp::Phantom do
 
   context "rendering to a String" do
     before(:all) do
-      phantom = Shrimp::Phantom.new(Shrimp.configuration.phantomjs, 
-                                    "file://#{testfile}", { :margin => "2cm" }, 
+      phantom = Shrimp::Phantom.new("file://#{testfile}", { :margin => "2cm" }, 
                                     { })
       @result = phantom.to_string("#{Dir.tmpdir}/test.pdf")
     end
@@ -114,15 +107,13 @@ describe Shrimp::Phantom do
 
   context "Error" do
     it "should return result nil" do
-      phantom = Shrimp::Phantom.new(Shrimp.configuration.phantomjs, 
-                                    "file://foo/bar")
+      phantom = Shrimp::Phantom.new("file://foo/bar")
       @result = phantom.run
       @result.should be_nil
     end
 
     it "should be unable to load the address" do
-      phantom = Shrimp::Phantom.new(Shrimp.configuration.phantomjs, 
-                                    "file:///foo/bar")
+      phantom = Shrimp::Phantom.new("file:///foo/bar")
       phantom.run
       phantom.error.should include "Unable to load the address"
     end
@@ -131,14 +122,12 @@ describe Shrimp::Phantom do
   context "Error Bang!" do
 
     it "should be unable to load the address" do
-      phantom = Shrimp::Phantom.new(Shrimp.configuration.phantomjs, 
-                                    "file:///foo/bar")
+      phantom = Shrimp::Phantom.new("file:///foo/bar")
       expect { phantom.run! }.to raise_error Shrimp::RenderingError
     end
 
     it "should be unable to copy file" do
-      phantom = Shrimp::Phantom.new(Shrimp.configuration.phantomjs, 
-                                    "file://#{testfile}")
+      phantom = Shrimp::Phantom.new("file://#{testfile}")
       expect { phantom.to_pdf!("/foo/bar/") }.to raise_error Shrimp::RenderingError
     end
   end

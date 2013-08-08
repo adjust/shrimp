@@ -9,8 +9,8 @@ module Shrimp
     def call(env)
       @request = Rack::Request.new(env)
       if render_as_pdf? #&& headers['Content-Type'] =~ /text\/html|application\/xhtml\+xml/
-        Phantom.new(@options[:phantomjs], @request.url.sub(%r{\.pdf}, ''), 
-                    @options, @request.cookies).to_pdf(render_to) 
+        Phantom.new(@request.url.sub(%r{\.pdf}, ''), @options, 
+                    @request.cookies).to_pdf(render_to) 
         file = File.open(render_to, "rb")
         body = file.read
         file.close

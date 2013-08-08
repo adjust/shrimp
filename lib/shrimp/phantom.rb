@@ -37,12 +37,12 @@ module Shrimp
     # outfile     - optional path for the output file a Tempfile will be created if not given
     #
     # Returns self
-    def initialize(executable, url_or_file, options = { }, cookies={ }, outfile = nil)
+    def initialize(url_or_file, options = { }, cookies={ }, outfile = nil)
       @source  = Source.new(url_or_file)
       @options = Shrimp.configuration.default_options.merge(options)
       @cookies = cookies
       @outfile = File.expand_path(outfile) if outfile
-      @executable = executable
+      @executable = Shrimp.configuration.phantomjs
       raise NoExecutableError.new(@executable) unless File.exists?(@executable)
     end
 
