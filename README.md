@@ -101,8 +101,8 @@ Shrimp comes with a middleware that allows users to get a PDF view of any page o
 ### Troubleshooting
 
 *  **Single thread issue:** In development environments it is common to run a
-   single server process. This can cause issues when rendering your pdf
-   requires wkhtmltopdf to hit your server again (for images, js, css).
+   single server process. This can cause issues because rendering your pdf
+   requires phantomjs to hit your server again (for images, js, css).
    This is because the resource requests will get blocked by the initial
    request and the initial request will be waiting on the resource
    requests causing a deadlock.
@@ -119,6 +119,7 @@ Shrimp comes with a middleware that allows users to get a PDF view of any page o
         worker_processes 3
    
    Then to run the app `unicorn_rails -c config/unicorn.conf` (from rails_root)
+  (taken from pdfkit readme: https://github.com/pdfkit/pdfkit)
 
 ## Contributing
 
