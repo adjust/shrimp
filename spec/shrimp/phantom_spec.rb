@@ -20,7 +20,7 @@ describe Shrimp::Phantom do
       config.format = 'Letter'
       config.margin = '1cm'
       config.tmpdir = Dir.tmpdir
-      config.phantomjs = '/home/justin/Downloads/phantomjs-1.9.1-linux-x86_64/bin/phantomjs'
+      config.phantomjs = 'configure a phantomjs location'
     end
   end
 

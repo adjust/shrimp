@@ -8,15 +8,15 @@ Read our [blogpost](http://big-elephants.com/2012-12/pdf-rendering-with-phantomj
 
 Add this line to your application's Gemfile:
 
-    gem 'shrimp', :git => https://github.com/yoccodog/shrimp.git
+    gem 'shrimp'
 
 And then execute:
 
     $ bundle
 
-Or clone it yourself as:
+Or install it yourself as:
 
-    $ git clone install https://github.com/yoccodog/shrimp.git
+    $ gem install shrimp
 
 
 ### pantomjs

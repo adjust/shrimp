@@ -22,7 +22,7 @@ def mock_app(options = { }, conditions = { })
   @app        = Rack::Session::Cookie.new(@middleware, key: 'rack.session', secret: '53cr3t')
   #@middleware.should_receive(:fire_phantom).any_number_of_times
   Shrimp.configure do |config|
-    config.phantomjs = '/home/justin/Downloads/phantomjs-1.9.1-linux-x86_64/bin/phantomjs'
+    config.phantomjs = 'configure a phantomjs location'
   end
 end
 
