@@ -1,6 +1,6 @@
 # Shrimp
 [![Build Status](https://travis-ci.org/adeven/shrimp.png?branch=master)](https://travis-ci.org/adeven/shrimp)
-Creates PDFs from URLs using phantomjs
+Creates PDFs from URLs using phantomjs.
 
 Read our [blogpost](http://big-elephants.com/2012-12/pdf-rendering-with-phantomjs/) about how it works.
 
@@ -42,7 +42,7 @@ Shrimp.configure do |config|
 
   # the default pdf output format
   # e.g. "5in*7.5in", "10cm*20cm", "A4", "Letter"
-  # config.format           = 'A4'
+  # config.format           = 'Letter'
 
   # the default margin
   # config.margin           = '1cm'
@@ -56,13 +56,11 @@ Shrimp.configure do |config|
   # a temporary dir used to store tempfiles
   # config.tmpdir           = Dir.tmpdir
 
-  # the default rendering time in ms
-  # increase if you need to render very complex pages
-  # config.rendering_time   = 1000
+  # whether or not exceptions should explicitly be raised
+  # config.fail_silently    = false
 
-  # the timeout for the phantomjs rendering process in ms
-  # this needs always to be higher than rendering_time
-  # config.rendering_timeout       = 90000
+  # the maximum time spent rendering a pdf
+  # config.rendering_time   = 30000
 end
 ```
 
@@ -106,51 +104,28 @@ Shrimp comes with a middleware that allows users to get a PDF view of any page o
     config.middleware.use Shrimp::Middleware, {}, :except => ['/secret']
 
 
-### Polling
+### Troubleshooting
 
-To avoid deadlocks Shrimp::Middleware renders the pdf in a separate process retuning a 503 Retry-After response Header.
-you can setup the polling interval and the polling offset in seconds.
+*  **Single thread issue:** In development environments it is common to run a
+   single server process. This can cause issues because rendering your pdf
+   requires phantomjs to hit your server again (for images, js, css).
+   This is because the resource requests will get blocked by the initial
+   request and the initial request will be waiting on the resource
+   requests causing a deadlock.
 
-    config.middleware.use Shrimp::Middleware, :polling_interval => 1, :polling_offset => 5
-
-### Caching
-
-To avoid rendering the page on each request you can setup some the cache ttl in seconds
-
-    config.middleware.use Shrimp::Middleware, :cache_ttl => 3600, :out_path => "my/pdf/store"
-
-
-### Ajax requests
-
-To include some fancy Ajax stuff with jquery
-
-```js
-
- var url = '/my_page.pdf'
- var statusCodes = {
-      200: function() {
-        return window.location.assign(url);
-      },
-      504: function() {
-       console.log("Shit's beeing wired")
-      },
-      503: function(jqXHR, textStatus, errorThrown) {
-        var wait;
-        wait = parseInt(jqXHR.getResponseHeader('Retry-After'));
-        return setTimeout(function() {
-          return $.ajax({
-            url: url,
-            statusCode: statusCodes
-          });
-        }, wait * 1000);
-      }
-  }
-  $.ajax({
-    url: url,
-    statusCode: statusCodes
-  })
-
-```
+   This is usually not an issue in a production environment. To get
+   around this issue you may want to run a server with multiple workers
+   like Passenger or try to embed your resources within your HTML to
+   avoid extra HTTP requests.
+   
+   Example solution (rails / bundler), add unicorn to the development 
+   group in your Gemfile `gem 'unicorn'` then run `bundle`. Next, add a 
+   file `config/unicorn.conf` with
+   
+        worker_processes 3
+   
+   Then to run the app `unicorn_rails -c config/unicorn.conf` (from rails_root)
+  (taken from pdfkit readme: https://github.com/pdfkit/pdfkit)
 
 ## Contributing
 
