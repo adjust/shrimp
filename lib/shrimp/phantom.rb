@@ -22,7 +22,7 @@ module Shrimp
   end
 
   class Phantom
-    attr_accessor :source, :configuration, :outfile
+    attr_accessor :source, :configuration, :outfile, :phantomjs_command_line_options
     attr_reader :options, :cookies, :result, :error
     SCRIPT_FILE = File.expand_path('../rasterize.js', __FILE__)
 
@@ -55,9 +55,10 @@ module Shrimp
       cookie_file                       = dump_cookies
       format, zoom, margin, orientation = options[:format], options[:zoom], options[:margin], options[:orientation]
       rendering_time, timeout           = options[:rendering_time], options[:rendering_timeout]
+      phantomjs_command_line_options    = Shrimp.configuration.phantomjs_command_line_options
       @outfile                          ||= "#{options[:tmpdir]}/#{Digest::MD5.hexdigest((Time.now.to_i + rand(9001)).to_s)}.pdf"
 
-      [Shrimp.configuration.phantomjs, SCRIPT_FILE, @source.to_s, @outfile, format, zoom, margin, orientation, cookie_file, rendering_time, timeout].join(" ")
+      [Shrimp.configuration.phantomjs, phantomjs_command_line_options, SCRIPT_FILE, @source.to_s, @outfile, format, zoom, margin, orientation, cookie_file, rendering_time, timeout].join(" ")
     end
 
     # Public: initializes a new Phantom Object

@@ -63,6 +63,11 @@ Shrimp.configure do |config|
   # the timeout for the phantomjs rendering process in ms
   # this needs always to be higher than rendering_time
   # config.rendering_timeout       = 90000
+
+  # the command line options passed to phantomjs
+  # command line options can be found at https://github.com/ariya/phantomjs/wiki/API-Reference
+  # config.phantomjs_command_line_options       = "--ignore-ssl-errors=true --web-security=false"
+ 
 end
 ```
 

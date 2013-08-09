@@ -2,7 +2,7 @@ require 'tmpdir'
 module Shrimp
   class Configuration
     attr_accessor :default_options
-    attr_writer :phantomjs
+    attr_writer :phantomjs, :phantomjs_command_line_options
 
     [:format, :margin, :zoom, :orientation, :tmpdir, :rendering_timeout, :rendering_time].each do |m|
       define_method("#{m}=") do |val|
@@ -24,6 +24,10 @@ module Shrimp
 
     def phantomjs
       @phantomjs ||= (defined?(Bundler::GemfileError) ? `bundle exec which phantomjs` : `which phantomjs`).chomp
+    end
+
+    def phantomjs_command_line_options
+      @phantomjs_command_line_options ||= nil
     end
   end
 
