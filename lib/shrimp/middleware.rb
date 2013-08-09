@@ -9,7 +9,8 @@ module Shrimp
     def call(env)
       @request = Rack::Request.new(env)
       if render_as_pdf? #&& headers['Content-Type'] =~ /text\/html|application\/xhtml\+xml/
-        Phantom.new(@request.url.sub(%r{\.pdf}, ''), @options, 
+        Phantom.new(Shrimp.configuration.options[:phantomjs], 
+                    @request.url.sub(%r{\.pdf}, ''), @options, 
                     @request.cookies).to_pdf(render_to) 
         file = File.open(render_to, "rb")
         body = file.read
@@ -29,7 +30,7 @@ module Shrimp
 
     def render_to
       file_name = Digest::MD5.hexdigest(@request.path) + ".pdf"
-      file_path = Shrimp.configuration.default_options[:tmpdir]
+      file_path = Shrimp.configuration.options[:tmpdir]
       "#{file_path}/#{file_name}"
     end
 
