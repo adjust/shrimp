@@ -55,6 +55,12 @@ Shrimp.configure do |config|
 
   # a temporary dir used to store tempfiles
   # config.tmpdir           = Dir.tmpdir
+
+  # whether or not exceptions should explicitly be raised
+  # config.fail_silently    = false
+
+  # the maximum time spent rendering a pdf
+  # config.rendering_time   = 30000
 end
 ```
 
