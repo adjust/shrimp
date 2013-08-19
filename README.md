@@ -63,7 +63,22 @@ Shrimp.configure do |config|
   # the timeout for the phantomjs rendering process in ms
   # this needs always to be higher than rendering_time
   # config.rendering_timeout       = 90000
+
+  # the path to a json configuration file for command-line options
+  # config.command_config_file = "#{Rails.root.join('config', 'shrimp', 'config.json')}"
 end
+```
+
+### Command Configuration
+
+```
+{
+    "diskCache": false,
+    "ignoreSslErrors": false,
+    "loadImages": true,
+    "outputEncoding": "utf8",
+    "webSecurity": true
+}
 ```
 
 ## Middleware
