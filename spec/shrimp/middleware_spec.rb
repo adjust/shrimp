@@ -18,7 +18,6 @@ def mock_app(options = { }, conditions = { })
 
   @middleware = Shrimp::Middleware.new(main_app, options, conditions)
   @app        = Rack::Session::Cookie.new(@middleware, :key => 'rack.session')
-  @middleware.should_receive(:fire_phantom).any_number_of_times
 end
 
 
@@ -64,7 +63,7 @@ describe Shrimp::Middleware do
     end
 
     it "should return a pdf with 200 after rendering" do
-      mock_file = mock(File, :read => "Hello World", :close => true, :mtime => Time.now)
+      mock_file = double(File, :read => "Hello World", :close => true, :mtime => Time.now)
       File.should_receive(:'exists?').and_return true
       File.should_receive(:'size').and_return 1000
       File.should_receive(:'open').and_return mock_file

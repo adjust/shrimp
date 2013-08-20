@@ -23,4 +23,5 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency(%q<rake>, [">=0.9.2"])
   gem.add_development_dependency(%q<rspec>, [">= 2.2.0"])
   gem.add_development_dependency(%q<rack-test>, [">= 0.5.6"])
+  gem.add_development_dependency(%q<rack>, ["= 1.4.1"])
 end
