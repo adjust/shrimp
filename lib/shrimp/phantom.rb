@@ -55,9 +55,10 @@ module Shrimp
       cookie_file                       = dump_cookies
       format, zoom, margin, orientation = options[:format], options[:zoom], options[:margin], options[:orientation]
       rendering_time, timeout           = options[:rendering_time], options[:rendering_timeout]
+      viewport_width, viewport_height   = options[:viewport_width], options[:viewport_height]
       @outfile                          ||= "#{options[:tmpdir]}/#{Digest::MD5.hexdigest((Time.now.to_i + rand(9001)).to_s)}.pdf"
       command_config_file               = "--config=#{options[:command_config_file]}"
-      [Shrimp.configuration.phantomjs, command_config_file, SCRIPT_FILE, @source.to_s, @outfile, format, zoom, margin, orientation, cookie_file, rendering_time, timeout].join(" ")
+      [Shrimp.configuration.phantomjs, command_config_file, SCRIPT_FILE, @source.to_s, @outfile, format, zoom, margin, orientation, cookie_file, rendering_time, timeout, viewport_width, viewport_height ].join(" ")
     end
 
     # Public: initializes a new Phantom Object

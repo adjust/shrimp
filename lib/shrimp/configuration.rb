@@ -4,7 +4,7 @@ module Shrimp
     attr_accessor :default_options
     attr_writer :phantomjs
 
-    [:format, :margin, :zoom, :orientation, :tmpdir, :rendering_timeout, :rendering_time, :command_config_file].each do |m|
+    [:format, :margin, :zoom, :orientation, :tmpdir, :rendering_timeout, :rendering_time, :command_config_file, :viewport_height, :viewport_height].each do |m|
       define_method("#{m}=") do |val|
         @default_options[m]=val
       end
@@ -19,7 +19,9 @@ module Shrimp
           :tmpdir               => Dir.tmpdir,
           :rendering_timeout    => 90000,
           :rendering_time       => 1000,
-          :command_config_file  => File.expand_path('../config.json', __FILE__)
+          :command_config_file  => File.expand_path('../config.json', __FILE__),
+          :viewport_width       => 600,
+          :viewport_height      => 600
       }
     end
 
