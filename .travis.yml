@@ -7,6 +7,4 @@ rvm:
   - 2.0.0
 matrix:
   allow_failures:
-    - rvm: 
-      - ruby-head  
-      - 2.0.0
+    - rvm: ruby-head  
