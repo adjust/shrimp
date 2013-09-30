@@ -60,6 +60,12 @@ Shrimp.configure do |config|
   # increase if you need to render very complex pages
   # config.rendering_time   = 1000
 
+  # change the viewport size.  If you rendering pages that have 
+  # flexible page width and height then you may need to set this
+  # to enforce a specific size
+  # config.viewport_width = 600 
+  # config.viewport_height = 600
+
   # the timeout for the phantomjs rendering process in ms
   # this needs always to be higher than rendering_time
   # config.rendering_timeout       = 90000
