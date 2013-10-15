@@ -19,9 +19,9 @@ Or install it yourself as:
     $ gem install shrimp
 
 
-### pantomjs
+### Phantomjs
 
-    See http://phantomjs.org/download.html on how to install phatomjs
+    See http://phantomjs.org/download.html on how to install phantomjs
 
 ## Usage
 
