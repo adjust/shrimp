@@ -33,8 +33,9 @@ describe Shrimp::Phantom do
   end
 
   it "should render a pdf file" do
-    #phantom = Shrimp::Phantom.new("file://#{@path}")
-    #phantom.to_pdf("#{Dir.tmpdir}/test.pdf").first should eq "#{Dir.tmpdir}/test.pdf"
+    phantom = Shrimp::Phantom.new("file://#{testfile}")
+    phantom.to_pdf("#{Dir.tmpdir}/test.pdf").should eq "#{Dir.tmpdir}/test.pdf"
+    phantom.result.should start_with "rendered to: #{Dir.tmpdir}/test.pdf"
   end
 
   it "should accept a local file url" do
