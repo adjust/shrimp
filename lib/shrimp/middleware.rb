@@ -18,16 +18,11 @@ module Shrimp
           return error_response
         end
         return ready_response if env['HTTP_X_REQUESTED_WITH']
-        file = File.open(render_to, "rb")
-        body = file.read
-        file.close
+        body = pdf_body()
         File.delete(render_to) if @options[:cache_ttl] == 0
         remove_rendering_flag
-        response                  = [body]
-        headers                   = { }
-        headers["Content-Length"] = (body.respond_to?(:bytesize) ? body.bytesize : body.size).to_s
-        headers["Content-Type"]   = "application/pdf"
-        [200, headers, response]
+        headers = pdf_headers(body)
+        [200, headers, [body]]
       else
         if rendering_in_progress?
           if rendering_timed_out?

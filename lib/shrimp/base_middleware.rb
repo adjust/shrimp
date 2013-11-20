@@ -49,6 +49,20 @@ module Shrimp
 
     private
 
+    def pdf_body
+      file = File.open(render_to, "rb")
+      body = file.read
+      file.close
+      body
+    end
+
+    def pdf_headers(body)
+      { }.tap do |headers|
+        headers["Content-Length"] = (body.respond_to?(:bytesize) ? body.bytesize : body.size).to_s
+        headers["Content-Type"]   = "application/pdf"
+      end
+    end
+
     def render_to
       file_name = Digest::MD5.hexdigest(@request.path) + ".pdf"
       file_path = @options[:out_path]
