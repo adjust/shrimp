@@ -1,5 +1,7 @@
 require 'uri'
 require 'json'
+require 'shellwords'
+
 module Shrimp
   class NoExecutableError < StandardError
     def initialize
@@ -31,8 +33,8 @@ module Shrimp
     # Returns the stdout output of phantomjs
     def run
       @error  = nil
-      puts "Running command: #{cmd_array.join(' ')}"
-      @result = IO.popen(cmd_array).read
+      #puts "Running command: #{cmd}"
+      @result = `#{cmd}`
       unless $?.exitstatus == 0
         @error  = @result
         @result = nil
@@ -51,7 +53,12 @@ module Shrimp
       @result
     end
 
-    # Public: Returns the phantom rasterize command
+    # Public: Returns the arguments for the PhantomJS rasterize command as a shell-escaped string
+    def cmd
+      Shellwords.join cmd_array
+    end
+
+    # Public: Returns the arguments for the PhantomJS rasterize command as an array
     def cmd_array
       cookie_file                       = dump_cookies
       format, zoom, margin, orientation = options[:format], options[:zoom], options[:margin], options[:orientation]

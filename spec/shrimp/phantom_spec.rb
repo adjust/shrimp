@@ -47,11 +47,23 @@ describe Shrimp::Phantom do
     phantom.source.should be_url
   end
 
-  it "should parse options into a cmd line" do
-    phantom = Shrimp::Phantom.new("file://#{testfile}", { :margin => "2cm" }, { }, "#{Dir.tmpdir}/test.pdf")
-    phantom.cmd.should include "test.pdf A4 1 2cm portrait"
-    phantom.cmd.should include "file://#{testfile}"
-    phantom.cmd.should include "lib/shrimp/rasterize.js"
+  describe '#cmd' do
+    it "should generate the correct cmd" do
+      phantom = Shrimp::Phantom.new("file://#{testfile}", { :margin => "2cm" }, { }, "#{Dir.tmpdir}/test.pdf")
+      phantom.cmd.should include "test.pdf A4 1 2cm portrait"
+      phantom.cmd.should include "file://#{testfile}"
+      phantom.cmd.should include "lib/shrimp/rasterize.js"
+    end
+
+    it "cmd should escape the args" do
+      phantom = Shrimp::Phantom.new("http://example.com/?something")
+      phantom.cmd_array.should include "http://example.com/?something"
+      phantom.cmd.      should include "http://example.com/\\?something"
+
+      phantom = Shrimp::Phantom.new("http://example.com/path/file.html?width=100&height=100")
+      phantom.cmd_array.should include "http://example.com/path/file.html?width=100&height=100"
+      phantom.cmd.      should include "http://example.com/path/file.html\\?width\\=100\\&height\\=100"
+    end
   end
 
   context "rendering to a file" do
