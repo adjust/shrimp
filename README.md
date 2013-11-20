@@ -85,6 +85,10 @@ Shrimp.configure do |config|
   # The default options are listed in the Readme.  To use your own file from
   # config/shrimp/config.json in Rails app, you could do this:
   config.command_config_file = Rails.root.join('config/shrimp/config.json')
+
+  # Enable if you want to see details such as the phantomjs command line that it's about to execute.
+  config.debug = false
+
 end
 ```
 
