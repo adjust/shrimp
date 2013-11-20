@@ -26,6 +26,7 @@ end
 
 describe Shrimp::Middleware do
   before { mock_app(options) }
+  subject { @middleware }
 
   context "matching pdf" do
     it "should render as pdf" do
@@ -75,6 +76,16 @@ describe Shrimp::Middleware do
       get '/test.pdf'
       last_response.status.should eq 200
       last_response.body.should eq "Hello World"
+    end
+
+    describe "requesting a simple path" do
+      before { get '/test.pdf' }
+      its(:html_url) { should eq 'http://example.org/test' }
+    end
+
+    describe "requesting a path with a query string" do
+      before { get '/test.pdf?size=10' }
+      its(:html_url) { should eq 'http://example.org/test?size=10' }
     end
   end
 

@@ -50,11 +50,16 @@ module Shrimp
       end
     end
 
+    # The URL for the HTML-formatted web page that we are converting into a PDF.
+    def html_url
+      @request.url.sub(%r<\.pdf(\?|$)>, '\1')
+    end
+
     private
 
     # Private: start phantom rendering in a separate process
     def fire_phantom
-      Process::detach fork { Phantom.new(@request.url.sub(%r{\.pdf$}, ''), @options, @request.cookies).to_pdf(render_to) }
+      Process::detach fork { Phantom.new(html_url, @options, @request.cookies).to_pdf(render_to) }
     end
 
     def render_to
