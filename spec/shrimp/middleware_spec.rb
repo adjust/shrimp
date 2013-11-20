@@ -67,15 +67,25 @@ describe Shrimp::Middleware do
       last_response.status.should eq 503
     end
 
-    it "should return a pdf with 200 after rendering" do
-      mock_file = double(File, :read => "Hello World", :close => true, :mtime => Time.now)
-      File.should_receive(:exists?).and_return true
-      File.should_receive(:size).and_return 1000
-      File.should_receive(:open).and_return mock_file
-      File.should_receive(:new).and_return mock_file
-      get '/test.pdf'
-      last_response.status.should eq 200
-      last_response.body.should eq "Hello World"
+    describe "when already_rendered? and up_to_date?" do
+      before {
+        mock_file = double(File, :read => "Hello World", :close => true, :mtime => Time.now)
+        File.should_receive(:exists?).at_least(:once).and_return true
+        File.should_receive(:size).and_return 1000
+        File.should_receive(:open).and_return mock_file
+        File.should_receive(:new).at_least(:once).and_return mock_file
+        get '/test.pdf'
+      }
+
+      its(:rendering_in_progress?) { should eq false }
+      its(:already_rendered?)      { should eq true }
+      its(:up_to_date?)            { should eq true }
+
+      it "should return a pdf with 200" do
+        last_response.status.should eq 200
+        last_response.headers['Content-Type'].should eq 'application/pdf'
+        last_response.body.should eq "Hello World"
+      end
     end
 
     describe "requesting a simple path" do

@@ -76,8 +76,8 @@ module Shrimp
     end
 
     def rendering_in_progress?
-      @request.session["phantom-rendering"]||={ }
-      @request.session["phantom-rendering"][render_to]
+      @request.session["phantom-rendering"] ||={ }
+      !!@request.session["phantom-rendering"][render_to]
     end
 
 
