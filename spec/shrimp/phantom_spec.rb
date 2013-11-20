@@ -78,7 +78,7 @@ describe Shrimp::Phantom do
     end
 
     it "should be a valid pdf" do
-      valid_pdf(@result)
+      valid_pdf(@result).should eq true
     end
   end
 
@@ -94,7 +94,7 @@ describe Shrimp::Phantom do
     end
 
     it "should be a valid pdf" do
-      valid_pdf(@result)
+      valid_pdf(@result).should eq true
     end
   end
 
@@ -109,7 +109,7 @@ describe Shrimp::Phantom do
     end
 
     it "should be a valid pdf" do
-      valid_pdf(@result)
+      valid_pdf(@result).should eq true
     end
   end
 
