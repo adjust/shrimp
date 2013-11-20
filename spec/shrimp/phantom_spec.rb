@@ -13,16 +13,16 @@ describe Shrimp::Phantom do
   end
 
   it "should initialize attributes" do
-    phantom = Shrimp::Phantom.new("file://#{test_file}", { :margin => "2cm" }, { }, "#{Dir.tmpdir}/test.pdf")
+    phantom = Shrimp::Phantom.new("file://#{test_file}", { :margin => "2cm" }, { }, "#{tmpdir}/test.pdf")
     phantom.source.to_s.should eq "file://#{test_file}"
     phantom.options[:margin].should eq "2cm"
-    phantom.outfile.should eq "#{Dir.tmpdir}/test.pdf"
+    phantom.outfile.should eq "#{tmpdir}/test.pdf"
   end
 
   it "should render a pdf file" do
     phantom = Shrimp::Phantom.new("file://#{test_file}")
-    phantom.to_pdf("#{Dir.tmpdir}/test.pdf").should eq "#{Dir.tmpdir}/test.pdf"
-    phantom.result.should start_with "rendered to: #{Dir.tmpdir}/test.pdf"
+    phantom.to_pdf("#{tmpdir}/test.pdf").should eq "#{tmpdir}/test.pdf"
+    phantom.result.should start_with "rendered to: #{tmpdir}/test.pdf"
   end
 
   it "should accept a local file url" do
@@ -37,7 +37,7 @@ describe Shrimp::Phantom do
 
   describe '#cmd' do
     it "should generate the correct cmd" do
-      phantom = Shrimp::Phantom.new("file://#{test_file}", { :margin => "2cm" }, { }, "#{Dir.tmpdir}/test.pdf")
+      phantom = Shrimp::Phantom.new("file://#{test_file}", { :margin => "2cm" }, { }, "#{tmpdir}/test.pdf")
       phantom.cmd.should include "test.pdf A4 1 2cm portrait"
       phantom.cmd.should include "file://#{test_file}"
       phantom.cmd.should include "lib/shrimp/rasterize.js"
@@ -56,7 +56,7 @@ describe Shrimp::Phantom do
 
   context "rendering to a file" do
     before(:all) do
-      phantom = Shrimp::Phantom.new("file://#{test_file}", { :margin => "2cm" }, { }, "#{Dir.tmpdir}/test.pdf")
+      phantom = Shrimp::Phantom.new("file://#{test_file}", { :margin => "2cm" }, { }, "#{tmpdir}/test.pdf")
       @result = phantom.to_file
     end
 
@@ -72,12 +72,12 @@ describe Shrimp::Phantom do
   context "rendering to a pdf" do
     before(:all) do
       @phantom = Shrimp::Phantom.new("file://#{test_file}", { :margin => "2cm" }, { })
-      @result  = @phantom.to_pdf("#{Dir.tmpdir}/test.pdf")
+      @result  = @phantom.to_pdf("#{tmpdir}/test.pdf")
     end
 
     it "should return a path to pdf" do
       @result.should be_a String
-      @result.should eq "#{Dir.tmpdir}/test.pdf"
+      @result.should eq "#{tmpdir}/test.pdf"
     end
 
     it "should be a valid pdf" do
@@ -88,7 +88,7 @@ describe Shrimp::Phantom do
   context "rendering to a String" do
     before(:all) do
       phantom = Shrimp::Phantom.new("file://#{test_file}", { :margin => "2cm" }, { })
-      @result = phantom.to_string("#{Dir.tmpdir}/test.pdf")
+      @result = phantom.to_string("#{tmpdir}/test.pdf")
     end
 
     it "should return the File IO String" do

@@ -5,6 +5,14 @@ RSpec.configure do |config|
   include Rack::Test::Methods
 end
 
+Shrimp.configure do |config|
+  config.tmpdir = Dir.mktmpdir('shrimp')
+end
+
+def tmpdir
+  Shrimp.configuration.default_options[:tmpdir]
+end
+
 def test_file
   File.expand_path('../shrimp/test_file.html', __FILE__)
 end
@@ -33,7 +41,7 @@ end
 def middleware_options
   {
     :margin         => "1cm",
-    :out_path         => Dir.tmpdir,
+    :out_path         => tmpdir,
     :polling_offset   => 10,
     :polling_interval => 1,
     :cache_ttl        => 3600,
