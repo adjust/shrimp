@@ -10,7 +10,7 @@ def valid_pdf(io)
   end
 end
 
-def testfile
+def test_file
   File.expand_path('../test_file.html', __FILE__)
 end
 
@@ -26,20 +26,20 @@ describe Shrimp::Phantom do
   end
 
   it "should initialize attributes" do
-    phantom = Shrimp::Phantom.new("file://#{testfile}", { :margin => "2cm" }, { }, "#{Dir.tmpdir}/test.pdf")
-    phantom.source.to_s.should eq "file://#{testfile}"
+    phantom = Shrimp::Phantom.new("file://#{test_file}", { :margin => "2cm" }, { }, "#{Dir.tmpdir}/test.pdf")
+    phantom.source.to_s.should eq "file://#{test_file}"
     phantom.options[:margin].should eq "2cm"
     phantom.outfile.should eq "#{Dir.tmpdir}/test.pdf"
   end
 
   it "should render a pdf file" do
-    phantom = Shrimp::Phantom.new("file://#{testfile}")
+    phantom = Shrimp::Phantom.new("file://#{test_file}")
     phantom.to_pdf("#{Dir.tmpdir}/test.pdf").should eq "#{Dir.tmpdir}/test.pdf"
     phantom.result.should start_with "rendered to: #{Dir.tmpdir}/test.pdf"
   end
 
   it "should accept a local file url" do
-    phantom = Shrimp::Phantom.new("file://#{testfile}")
+    phantom = Shrimp::Phantom.new("file://#{test_file}")
     phantom.source.should be_url
   end
 
@@ -50,9 +50,9 @@ describe Shrimp::Phantom do
 
   describe '#cmd' do
     it "should generate the correct cmd" do
-      phantom = Shrimp::Phantom.new("file://#{testfile}", { :margin => "2cm" }, { }, "#{Dir.tmpdir}/test.pdf")
+      phantom = Shrimp::Phantom.new("file://#{test_file}", { :margin => "2cm" }, { }, "#{Dir.tmpdir}/test.pdf")
       phantom.cmd.should include "test.pdf A4 1 2cm portrait"
-      phantom.cmd.should include "file://#{testfile}"
+      phantom.cmd.should include "file://#{test_file}"
       phantom.cmd.should include "lib/shrimp/rasterize.js"
     end
 
@@ -69,7 +69,7 @@ describe Shrimp::Phantom do
 
   context "rendering to a file" do
     before(:all) do
-      phantom = Shrimp::Phantom.new("file://#{testfile}", { :margin => "2cm" }, { }, "#{Dir.tmpdir}/test.pdf")
+      phantom = Shrimp::Phantom.new("file://#{test_file}", { :margin => "2cm" }, { }, "#{Dir.tmpdir}/test.pdf")
       @result = phantom.to_file
     end
 
@@ -84,7 +84,7 @@ describe Shrimp::Phantom do
 
   context "rendering to a pdf" do
     before(:all) do
-      @phantom = Shrimp::Phantom.new("file://#{testfile}", { :margin => "2cm" }, { })
+      @phantom = Shrimp::Phantom.new("file://#{test_file}", { :margin => "2cm" }, { })
       @result  = @phantom.to_pdf("#{Dir.tmpdir}/test.pdf")
     end
 
@@ -100,7 +100,7 @@ describe Shrimp::Phantom do
 
   context "rendering to a String" do
     before(:all) do
-      phantom = Shrimp::Phantom.new("file://#{testfile}", { :margin => "2cm" }, { })
+      phantom = Shrimp::Phantom.new("file://#{test_file}", { :margin => "2cm" }, { })
       @result = phantom.to_string("#{Dir.tmpdir}/test.pdf")
     end
 
@@ -127,7 +127,7 @@ describe Shrimp::Phantom do
     end
 
     it "should be unable to copy file" do
-      phantom = Shrimp::Phantom.new("file://#{testfile}")
+      phantom = Shrimp::Phantom.new("file://#{test_file}")
       phantom.to_pdf("/foo/bar/")
       phantom.error.should include "Unable to copy file "
     end
@@ -141,7 +141,7 @@ describe Shrimp::Phantom do
     end
 
     it "should be unable to copy file" do
-      phantom = Shrimp::Phantom.new("file://#{testfile}")
+      phantom = Shrimp::Phantom.new("file://#{test_file}")
       expect { phantom.to_pdf!("/foo/bar/") }.to raise_error Shrimp::RenderingError
     end
   end
