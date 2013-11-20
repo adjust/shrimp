@@ -42,6 +42,12 @@ module Shrimp
       end
     end
 
+    def render_to
+      file_name = Digest::MD5.hexdigest(@request.path) + ".pdf"
+      file_path = @options[:out_path]
+      "#{file_path}/#{file_name}"
+    end
+
     # The URL for the HTML-formatted web page that we are converting into a PDF.
     def html_url
       @request.url.sub(%r<\.pdf(\?|$)>, '\1')
@@ -85,12 +91,6 @@ module Shrimp
         headers["Content-Length"] = (body.respond_to?(:bytesize) ? body.bytesize : body.size).to_s
         headers["Content-Type"]   = "application/pdf"
       end
-    end
-
-    def render_to
-      file_name = Digest::MD5.hexdigest(@request.path) + ".pdf"
-      file_path = @options[:out_path]
-      "#{file_path}/#{file_name}"
     end
 
     def concat(accepts, type)
