@@ -1,19 +1,6 @@
 #encoding: UTF-8
 require 'spec_helper'
 
-def valid_pdf(io)
-  case io
-    when File
-      io.read[0...4] == "%PDF"
-    when String
-      io[0...4] == "%PDF" || File.open(io).read[0...4] == "%PDF"
-  end
-end
-
-def test_file
-  File.expand_path('../test_file.html', __FILE__)
-end
-
 Shrimp.configure do |config|
   config.rendering_time = 1000
 end
@@ -78,7 +65,7 @@ describe Shrimp::Phantom do
     end
 
     it "should be a valid pdf" do
-      valid_pdf(@result).should eq true
+      valid_pdf?(@result).should eq true
     end
   end
 
@@ -94,7 +81,7 @@ describe Shrimp::Phantom do
     end
 
     it "should be a valid pdf" do
-      valid_pdf(@result).should eq true
+      valid_pdf?(@result).should eq true
     end
   end
 
@@ -109,7 +96,7 @@ describe Shrimp::Phantom do
     end
 
     it "should be a valid pdf" do
-      valid_pdf(@result).should eq true
+      valid_pdf?(@result).should eq true
     end
   end
 
