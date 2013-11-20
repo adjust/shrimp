@@ -59,6 +59,7 @@ module Shrimp
 
     # Private: start phantom rendering in a separate process
     def fire_phantom
+      puts %(#{self.class}: Converting web page at #{(html_url).inspect} into a PDF ...) if Shrimp.configuration.default_options[:debug]
       Process::detach fork { Phantom.new(html_url, @options, @request.cookies).to_pdf(render_to) }
     end
 
