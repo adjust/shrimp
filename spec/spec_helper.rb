@@ -10,7 +10,7 @@ Shrimp.configure do |config|
 end
 
 def tmpdir
-  Shrimp.configuration.default_options[:tmpdir]
+  Shrimp.config.tmpdir
 end
 
 def test_file

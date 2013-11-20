@@ -5,7 +5,7 @@ require 'shellwords'
 module Shrimp
   class NoExecutableError < StandardError
     def initialize
-      msg = "No phantomjs executable found at #{Shrimp.configuration.phantomjs}\n"
+      msg = "No phantomjs executable found at #{Shrimp.config.phantomjs}\n"
       msg << ">> Please install phantomjs - http://phantomjs.org/download.html"
       super(msg)
     end
@@ -66,7 +66,7 @@ module Shrimp
       viewport_width, viewport_height   = options[:viewport_width], options[:viewport_height]
       @outfile                          ||= "#{options[:tmpdir]}/#{Digest::MD5.hexdigest((Time.now.to_i + rand(9001)).to_s)}.pdf"
       command_config_file               = "--config=#{options[:command_config_file]}"
-      [Shrimp.configuration.phantomjs, command_config_file, SCRIPT_FILE, @source.to_s, @outfile, format, zoom, margin, orientation, cookie_file, rendering_time, timeout, viewport_width, viewport_height ].map(&:to_s)
+      [Shrimp.config.phantomjs, command_config_file, SCRIPT_FILE, @source.to_s, @outfile, format, zoom, margin, orientation, cookie_file, rendering_time, timeout, viewport_width, viewport_height ].map(&:to_s)
     end
 
     # Public: initializes a new Phantom Object
@@ -83,10 +83,10 @@ module Shrimp
     # Returns self
     def initialize(url_or_file, options = { }, cookies={ }, outfile = nil)
       @source  = Source.new(url_or_file)
-      @options = Shrimp.configuration.default_options.merge(options)
+      @options = Shrimp.config.to_h.merge(options)
       @cookies = cookies
       @outfile = File.expand_path(outfile) if outfile
-      raise NoExecutableError.new unless File.exists?(Shrimp.configuration.phantomjs)
+      raise NoExecutableError.new unless File.exists?(Shrimp.config.phantomjs)
     end
 
     # Public: renders to pdf
