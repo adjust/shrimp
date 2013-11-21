@@ -44,8 +44,29 @@ module Shrimp
 
     def run!
       run.tap {
-        raise RenderingError.new(@error) if @error
+        raise RenderingError.new(error) if error?
       }
+    end
+
+    def error?
+      !!error
+    end
+
+    def match_page_load_error
+      error.to_s.match /^(null|\S+) Unable to load the address!$/
+    end
+    def page_load_error?
+      !!match_page_load_error
+    end
+    def page_load_status_code
+      if match = match_page_load_error
+        status_code = match[1].to_s
+        if status_code =~ /\A\d+\Z/
+          status_code.to_i
+        else
+          status_code
+        end
+      end
     end
 
     # Public: Returns the arguments for the PhantomJS rasterize command as a shell-escaped string

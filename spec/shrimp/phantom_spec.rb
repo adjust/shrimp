@@ -100,17 +100,25 @@ describe Shrimp::Phantom do
     end
   end
 
-  context "Error" do
-    it "should return result nil" do
-      phantom = Shrimp::Phantom.new("file://foo/bar")
-      @result = phantom.run
-      @result.should be_nil
-    end
+  context "Errors" do
+    describe "'Unable to load the address' error" do
+      before { @result = phantom.run }
 
-    it "should be unable to load the address" do
-      phantom = Shrimp::Phantom.new("file:///foo/bar")
-      phantom.run
-      phantom.error.should include "Unable to load the address"
+      context 'an invalid http: address' do
+        subject(:phantom) { Shrimp::Phantom.new("http://example.com/foo/bar") }
+        it { @result.should be_nil }
+        its(:error)                 { should include "Unable to load the address" }
+        its(:page_load_error?)      { should eq true }
+        its(:page_load_status_code) { should eq 404 }
+      end
+
+      context 'an invalid file: address' do
+        subject(:phantom) { Shrimp::Phantom.new("file:///foo/bar") }
+        it { @result.should be_nil }
+        its(:error)                 { should include "Unable to load the address" }
+        its(:page_load_error?)      { should eq true }
+        its(:page_load_status_code) { should eq 'null' }
+      end
     end
 
     it "should be unable to copy file" do
@@ -120,7 +128,7 @@ describe Shrimp::Phantom do
     end
   end
 
-  context "Error Bang!" do
+  context "Errors (using bang methods)" do
 
     it "should be unable to load the address" do
       phantom = Shrimp::Phantom.new("file:///foo/bar")
