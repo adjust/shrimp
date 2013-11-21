@@ -63,7 +63,7 @@ Shrimp.configure do |config|
   config.orientation = 'portrait'
 
   # The directory where temporary files are stored, including the generated PDF files.
-  config.tmpdir = Dir.tmpdir
+  config.tmpdir = Dir.mktmpdir('shrimp'),
 
   # How long to wait (in ms) for PhantomJS to load the web page before saving it to a file.
   # Increase this if you need to render very complex pages.

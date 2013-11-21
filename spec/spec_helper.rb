@@ -6,7 +6,6 @@ RSpec.configure do |config|
 end
 
 Shrimp.configure do |config|
-  config.tmpdir = Dir.mktmpdir('shrimp')
 end
 
 def tmpdir

@@ -7,7 +7,7 @@ module Shrimp
         :margin               => '1cm',
         :zoom                 => 1,
         :orientation          => 'portrait',
-        :tmpdir               => Dir.tmpdir,
+        :tmpdir               => Dir.mktmpdir('shrimp'),
         :rendering_timeout    => 90000,
         :rendering_time       => 1000,
         :command_config_file  => File.expand_path('../config.json', __FILE__),
