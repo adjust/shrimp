@@ -30,7 +30,7 @@ module Shrimp
 
     # Public: Runs the phantomjs binary
     #
-    # Returns the stdout output of phantomjs
+    # Returns the stdout output from phantomjs
     def run
       @error  = nil
       puts "Running command: #{cmd}" if options[:debug]
@@ -43,14 +43,9 @@ module Shrimp
     end
 
     def run!
-      @error  = nil
-      @result = `#{cmd}`
-      unless $?.exitstatus == 0
-        @error  = @result
-        @result = nil
-        raise RenderingError.new(@error)
-      end
-      @result
+      run.tap {
+        raise RenderingError.new(@error) if @error
+      }
     end
 
     # Public: Returns the arguments for the PhantomJS rasterize command as a shell-escaped string
