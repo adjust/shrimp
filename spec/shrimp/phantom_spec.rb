@@ -22,7 +22,7 @@ describe Shrimp::Phantom do
   it "should render a pdf file" do
     phantom = Shrimp::Phantom.new("file://#{test_file}")
     phantom.to_pdf("#{tmpdir}/test.pdf").should eq "#{tmpdir}/test.pdf"
-    phantom.result.should start_with "rendered to: #{tmpdir}/test.pdf"
+    phantom.result.should include "rendered to: #{tmpdir}/test.pdf"
   end
 
   it "should accept a local file url" do
@@ -107,15 +107,38 @@ describe Shrimp::Phantom do
       context 'an invalid http: address' do
         subject(:phantom) { Shrimp::Phantom.new("http://example.com/foo/bar") }
         it { @result.should be_nil }
-        its(:error)                 { should include "Unable to load the address" }
+        its(:error)                 { should eq "404 Unable to load the address!" }
         its(:page_load_error?)      { should eq true }
         its(:page_load_status_code) { should eq 404 }
+      end
+
+      context 'an http: response that redirects' do
+        around(:each) do |example|
+          with_local_server do |server|
+            server.mount_proc '/' do |request, response|
+              response.body = 'Home'
+              raise WEBrick::HTTPStatus::OK
+            end
+            server.mount_proc '/redirect_me' do |request, response|
+              response['Location'] = '/'
+              raise WEBrick::HTTPStatus::Found
+            end
+            example.run
+          end
+        end
+        subject(:phantom) { Shrimp::Phantom.new("http://#{local_server_host}/redirect_me") }
+        it { @result.should be_nil }
+        its(:error)                 { should eq "302 Unable to load the address!" }
+        its(:page_load_error?)      { should eq true }
+        its(:page_load_status_code) { should eq 302 }
+        its('response.keys') { should include 'redirectURL' }
+        its(:redirect_to) { should eq "http://#{local_server_host}/" }
       end
 
       context 'an invalid file: address' do
         subject(:phantom) { Shrimp::Phantom.new("file:///foo/bar") }
         it { @result.should be_nil }
-        its(:error)                 { should include "Unable to load the address" }
+        its(:error)                 { should eq "null Unable to load the address!" }
         its(:page_load_error?)      { should eq true }
         its(:page_load_status_code) { should eq 'null' }
       end

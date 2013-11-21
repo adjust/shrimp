@@ -25,7 +25,7 @@ module Shrimp
 
   class Phantom
     attr_accessor :source, :configuration, :outfile
-    attr_reader :options, :cookies, :result, :error
+    attr_reader :options, :cookies, :result, :error, :response
     SCRIPT_FILE = File.expand_path('../rasterize.js', __FILE__)
 
     # Public: Runs the phantomjs binary
@@ -35,8 +35,12 @@ module Shrimp
       @error  = nil
       puts "Running command: #{cmd}" if options[:debug]
       @result = `#{cmd}`
+      if match = @result.match(response_line_regexp)
+        @response = JSON.parse match[1]
+        @result.gsub! response_line_regexp, ''
+      end
       unless $?.exitstatus == 0
-        @error  = @result
+        @error  = @result.chomp
         @result = nil
       end
       @result
@@ -46,6 +50,17 @@ module Shrimp
       run.tap {
         raise RenderingError.new(error) if error?
       }
+    end
+
+    def response_line_regexp
+      /^response: (.*)$\n?/
+    end
+    def redirect?
+      page_load_status_code == 302
+    end
+    def redirect_to
+      return unless redirect?
+      response['redirectURL'] if response
     end
 
     def error?
