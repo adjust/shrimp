@@ -1,31 +1,16 @@
 require 'spec_helper'
 
-def app
-  Rack::Lint.new(@app)
+shared_context Shrimp::Middleware do
+  def mock_app(options = { }, conditions = { })
+    @middleware = Shrimp::Middleware.new(main_app, options, conditions)
+    @app        = Rack::Session::Cookie.new(@middleware, :key => 'rack.session')
+  end
 end
-
-def options
-  { :margin         => "1cm",
-  :out_path         => Dir.tmpdir,
-  :polling_offset   => 10,
-  :polling_interval => 1,
-  :cache_ttl        => 3600,
-  :request_timeout  => 1 }
-end
-
-def mock_app(options = { }, conditions = { })
-  main_app = lambda { |env|
-    headers = { 'Content-Type' => "text/html" }
-    [200, headers, ['Hello world!']]
-  }
-
-  @middleware = Shrimp::Middleware.new(main_app, options, conditions)
-  @app        = Rack::Session::Cookie.new(@middleware, :key => 'rack.session')
-end
-
 
 describe Shrimp::Middleware do
-  before { mock_app(options) }
+  include_context Shrimp::Middleware
+
+  before { mock_app(middleware_options) }
   subject { @middleware }
 
   context "matching pdf" do
@@ -49,7 +34,7 @@ describe Shrimp::Middleware do
 
     it "should set render_to to out_path" do
       get '/test.pdf'
-      @middleware.send(:render_to).should match (Regexp.new("^#{options[:out_path]}"))
+      @middleware.send(:render_to).should match (Regexp.new("^#{middleware_options[:out_path]}"))
     end
 
     it "should return 504 on timeout" do
@@ -109,8 +94,10 @@ describe Shrimp::Middleware do
 end
 
 describe Shrimp::Middleware, "Conditions" do
+  include_context Shrimp::Middleware
+
   context "only" do
-    before { mock_app(options, :only => [%r[^/invoice], %r[^/public]]) }
+    before { mock_app(middleware_options, :only => [%r[^/invoice], %r[^/public]]) }
     it "render pdf for set only option" do
       get '/invoice/test.pdf'
       @middleware.send(:render_as_pdf?).should be true
@@ -128,7 +115,7 @@ describe Shrimp::Middleware, "Conditions" do
   end
 
   context "except" do
-    before { mock_app(options, :except => %w(/secret)) }
+    before { mock_app(middleware_options, :except => %w(/secret)) }
     it "render pdf for set only option" do
       get '/invoice/test.pdf'
       @middleware.send(:render_as_pdf?).should be true
