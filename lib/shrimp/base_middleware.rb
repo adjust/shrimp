@@ -34,6 +34,14 @@ module Shrimp
     end
 
     def call(env)
+      if @options[:thread_safe]
+        dup._call(env)
+      else
+        _call(env)
+      end
+    end
+
+    def _call(env)
       @request = Rack::Request.new(env)
       if render_as_pdf? #&& headers['Content-Type'] =~ /text\/html|application\/xhtml\+xml/
         render_as_pdf(env)

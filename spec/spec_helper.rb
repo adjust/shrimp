@@ -7,6 +7,12 @@ RSpec.configure do |config|
 end
 
 Shrimp.configure do |config|
+  # If we left this as the default value of true, then we couldn't check things like
+  # @middleware.render_as_pdf? in our tests after initiating a request with get '/test.pdf', because
+  # render_as_pdf? depends on @request, which doesn't get set until *after* we call call(env) with the
+  # request env.  But when thread_safe is true, it actually prevents call(env) from changing any
+  # instance variables in the original object.  (In the original object, @request will still be nil.)
+  config.thread_safe = false
 end
 
 def tmpdir

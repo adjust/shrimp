@@ -13,7 +13,8 @@ module Shrimp
         :command_config_file  => File.expand_path('../config.json', __FILE__),
         :viewport_width       => 600,
         :viewport_height      => 600,
-        :debug                => false
+        :debug                => false,
+        :thread_safe          => true
       }
     end
 
@@ -21,7 +22,7 @@ module Shrimp
       @options
     end
 
-    [:format, :margin, :zoom, :orientation, :tmpdir, :rendering_timeout, :rendering_time, :command_config_file, :viewport_width, :viewport_height, :debug].each do |m|
+    [:format, :margin, :zoom, :orientation, :tmpdir, :rendering_timeout, :rendering_time, :command_config_file, :viewport_width, :viewport_height, :debug, :thread_safe].each do |m|
       define_method("#{m}=") do |val|
         @options[m] = val
       end
