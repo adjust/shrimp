@@ -34,7 +34,7 @@ module Shrimp
         else
           File.delete(render_to) if already_rendered?
           set_rendering_flag
-          fire_phantom
+          render_pdf
           reload_response(@options[:polling_offset])
         end
       end
@@ -43,7 +43,7 @@ module Shrimp
     private
 
     # Private: start phantom rendering in a separate process
-    def fire_phantom
+    def render_pdf
       puts %(#{self.class}: Converting web page at #{(html_url).inspect} into a PDF ...) if Shrimp.config.debug
       Process::detach fork { Phantom.new(html_url, @options, @request.cookies).to_pdf(render_to) }
     end
