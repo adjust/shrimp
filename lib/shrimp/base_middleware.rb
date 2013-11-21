@@ -2,7 +2,7 @@ module Shrimp
   class BaseMiddleware
     def initialize(app, options = { }, conditions = { })
       @app        = app
-      @options    = options
+      @options    = Shrimp.config.to_h.merge(options)
       @conditions = conditions
     end
 
@@ -59,12 +59,12 @@ module Shrimp
     end
 
     def log_render_pdf_start
-      return unless Shrimp.config.debug
+      return unless @options[:debug]
       puts %(#{self.class}: Converting web page at #{(html_url).inspect} into a PDF ...)
     end
 
     def log_render_pdf_completion
-      return unless Shrimp.config.debug
+      return unless @options[:debug]
       puts "#{self.class}: Finished converting web page at #{(html_url).inspect} into a PDF"
       if @phantom.error?
         puts "#{self.class}: Error: #{@phantom.error}"
