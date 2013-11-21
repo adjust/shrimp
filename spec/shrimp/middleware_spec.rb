@@ -34,7 +34,7 @@ describe Shrimp::Middleware do
 
     it "should set render_to to out_path" do
       get '/test.pdf'
-      @middleware.send(:render_to).should match (Regexp.new("^#{middleware_options[:out_path]}"))
+      @middleware.send(:render_to).should start_with middleware_options[:out_path]
     end
 
     it "should return 504 on timeout" do
