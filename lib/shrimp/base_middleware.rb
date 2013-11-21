@@ -49,6 +49,30 @@ module Shrimp
 
     private
 
+    def render_pdf
+      log_render_pdf_start
+      Phantom.new(html_url, @options, @request.cookies).tap do |phantom|
+        @phantom = phantom
+        phantom.to_pdf(render_to)
+        log_render_pdf_completion
+      end
+    end
+
+    def log_render_pdf_start
+      return unless Shrimp.config.debug
+      puts %(#{self.class}: Converting web page at #{(html_url).inspect} into a PDF ...)
+    end
+
+    def log_render_pdf_completion
+      return unless Shrimp.config.debug
+      puts "#{self.class}: Finished converting web page at #{(html_url).inspect} into a PDF"
+      if @phantom.error?
+        puts "#{self.class}: Error: #{@phantom.error}"
+      else
+        puts "#{self.class}: Saved PDF to #{render_to}"
+      end
+    end
+
     def pdf_body
       file = File.open(render_to, "rb")
       body = file.read
