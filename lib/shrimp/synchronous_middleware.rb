@@ -8,7 +8,7 @@ module Shrimp
       return phantomjs_error_response if phantom.error?
 
       body = pdf_body()
-      headers = pdf_headers(body)
+      headers = pdf_headers(body, filename: @phantom.response_headers['X-Pdf-Filename'])
       [200, headers, [body]]
     end
 

@@ -43,6 +43,24 @@ describe Shrimp::SynchronousMiddleware do
       end
     end
 
+    context 'requesting an HTML resource that sets a X-Pdf-Filename header' do
+      before {
+        @middleware.stub(:html_url).and_return "file://#{test_file}"
+        phantom = Shrimp::Phantom.new(@middleware.html_url)
+        phantom.stub :response_headers => {
+          'X-Pdf-Filename' => 'Some Fancy Report Title.pdf'
+        }
+        Shrimp::Phantom.should_receive(:new).and_return phantom
+      }
+      before { get '/use_different_filename.pdf' }
+      it "should use the filename from the X-Pdf-Filename header" do
+        last_response.status.should eq 200
+        last_response.headers['Content-Type'].should eq 'application/pdf'
+        last_response.headers['Content-Disposition'].should eq %(attachment; filename="Some Fancy Report Title.pdf")
+        valid_pdf?(last_response.body).should eq true
+      end
+    end
+
     context 'requesting an HTML resource that redirects' do
       before {
         phantom = Shrimp::Phantom.new('http://example.org/redirect_me')

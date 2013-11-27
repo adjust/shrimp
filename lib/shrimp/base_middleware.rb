@@ -94,10 +94,31 @@ module Shrimp
       body
     end
 
-    def pdf_headers(body)
+    def default_pdf_options
+      {
+        :type         => 'application/octet-stream'.freeze,
+        :disposition  => 'attachment'.freeze,
+      }
+    end
+
+    def pdf_headers(body, options = {})
       { }.tap do |headers|
         headers["Content-Length"] = (body.respond_to?(:bytesize) ? body.bytesize : body.size).to_s
         headers["Content-Type"]   = "application/pdf"
+
+        # Based on send_file_headers! from actionpack/lib/action_controller/metal/data_streaming.rb
+        options = default_pdf_options.merge(@options).merge(options)
+        [:type, :disposition].each do |arg|
+          raise ArgumentError, ":#{arg} option required" if options[arg].nil?
+        end
+
+        disposition = options[:disposition]
+        disposition += %(; filename="#{options[:filename]}") if options[:filename]
+
+        headers.merge!(
+          'Content-Disposition'       => disposition,
+          'Content-Transfer-Encoding' => 'binary'
+        )
       end
     end
 
