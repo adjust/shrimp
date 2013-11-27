@@ -72,8 +72,12 @@ module Shrimp
       @request.session["phantom-rendering"][render_to] = Time.now
     end
 
+    def rendering_started_at
+      @request.session["phantom-rendering"][render_to]
+    end
+
     def rendering_timed_out?
-      Time.now - @request.session["phantom-rendering"][render_to] > @options[:request_timeout]
+      Time.now - rendering_started_at > @options[:request_timeout]
     end
 
     def rendering_in_progress?
