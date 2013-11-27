@@ -43,7 +43,7 @@ module Shrimp
 
     def _call(env)
       @request = Rack::Request.new(env)
-      if render_as_pdf? #&& headers['Content-Type'] =~ /text\/html|application\/xhtml\+xml/
+      if render_as_pdf?
         render_as_pdf(env)
       else
         @app.call(env)
@@ -99,10 +99,6 @@ module Shrimp
         headers["Content-Length"] = (body.respond_to?(:bytesize) ? body.bytesize : body.size).to_s
         headers["Content-Type"]   = "application/pdf"
       end
-    end
-
-    def concat(accepts, type)
-      (accepts || '').split(',').unshift(type).compact.join(',')
     end
 
   end
