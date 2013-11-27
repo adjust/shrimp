@@ -132,6 +132,7 @@ describe Shrimp::Phantom do
         its(:page_load_error?)      { should eq true }
         its(:page_load_status_code) { should eq 302 }
         its('response.keys') { should include 'redirectURL' }
+        its('response_headers.keys') { should == ['Location', 'Server', 'Date', 'Content-Length', 'Connection'] }
         its(:redirect_to) { should eq "http://#{local_server_host}/" }
       end
 

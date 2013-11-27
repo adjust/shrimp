@@ -25,7 +25,7 @@ module Shrimp
 
   class Phantom
     attr_accessor :source, :configuration, :outfile
-    attr_reader :options, :cookies, :result, :error, :response
+    attr_reader :options, :cookies, :result, :error, :response, :response_headers
     SCRIPT_FILE = File.expand_path('../rasterize.js', __FILE__)
 
     # Public: Runs the phantomjs binary
@@ -37,6 +37,9 @@ module Shrimp
       @result = `#{cmd}`
       if match = @result.match(response_line_regexp)
         @response = JSON.parse match[1]
+        @response_headers = @response['headers'].inject({}) {|hash, header|
+          hash[header['name']] = header['value']; hash
+        }
         @result.gsub! response_line_regexp, ''
       end
       unless $?.exitstatus == 0
