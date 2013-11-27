@@ -128,7 +128,7 @@ module Shrimp
           <head>
         </head>
           <body onLoad="setTimeout(function(){ window.location.reload()}, #{interval * 1000});">
-          <h2>Preparing pdf... </h2>
+          <h2>Preparing PDF file.  Please wait... </h2>
           </body>
         </ html>
       HTML
@@ -146,7 +146,7 @@ module Shrimp
         <head>
         </head>
         <body>
-        <a href="#{@request.path}">PDF ready here</a>
+        <a href="#{@request.path}">PDF file ready here</a>
         </body>
       </ html>
       HTML
@@ -162,7 +162,7 @@ module Shrimp
         <head>
         </head>
         <body>
-        <h2>Sorry request timed out... </h2>
+        <h2>Sorry, the request timed out.</h2>
         </body>
       </ html>
       HTML
