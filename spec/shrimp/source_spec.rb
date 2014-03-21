@@ -7,8 +7,9 @@ describe Shrimp::Source do
       source = Shrimp::Source.new("file:///test/test.html")
       source.should be_url
     end
+
     it "should match http urls" do
-      source = Shrimp::Source.new("http:///test/test.html")
+      source = Shrimp::Source.new("http://test/test.html")
       source.should be_url
     end
   end

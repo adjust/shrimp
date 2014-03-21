@@ -10,20 +10,30 @@ def valid_pdf(io)
   end
 end
 
-def testfile
-  File.expand_path('../test_file.html', __FILE__)
-end
-
-Shrimp.configure do |config|
-  config.rendering_time = 1000
-end
-
 describe Shrimp::Phantom do
+  let(:testfile) { File.expand_path('../test_file.html', __FILE__) }
+
   before do
-    Shrimp.configure do |config|
-      config.rendering_time = 1000
-    end
+    Shrimp.configure { |config| config.rendering_time = 1000 }
   end
+
+  # describe ".quote_arg" do
+  #   subject { described_class }
+
+  #   let(:arg) { "test" }
+
+  #   it "wraps the argument with single quotes" do
+  #     subject.quote_arg(arg).should eq "'test'"
+  #   end
+
+  #   context "when the argument contains single quotes" do
+  #     let(:arg) { "'te''st'" }
+
+  #     it "escapes them" do
+  #       %x(echo #{subject.quote_arg(arg)}).strip.should eq arg
+  #     end
+  #   end
+  # end
 
   it "should initialize attributes" do
     phantom = Shrimp::Phantom.new("file://#{testfile}", { :margin => "2cm" }, { }, "#{Dir.tmpdir}/test.pdf")
@@ -54,8 +64,18 @@ describe Shrimp::Phantom do
     phantom.cmd.should include "lib/shrimp/rasterize.js"
   end
 
+  it "should properly escape arguments" do
+    malicious_uri = "file:///hello';shutdown"
+    bogus_phantom = Shrimp::Phantom.new(malicious_uri)
+
+    bogus_phantom.cmd.should_not include malicious_uri
+
+    Shrimp.configuration.stub(:phantomjs).and_return "echo"
+    %x(#{bogus_phantom.cmd}).strip.should include malicious_uri
+  end
+
   context "rendering to a file" do
-    before(:all) do
+    before do
       phantom = Shrimp::Phantom.new("file://#{testfile}", { :margin => "2cm" }, { }, "#{Dir.tmpdir}/test.pdf")
       @result = phantom.to_file
     end
@@ -70,7 +90,7 @@ describe Shrimp::Phantom do
   end
 
   context "rendering to a pdf" do
-    before(:all) do
+    before do
       @phantom = Shrimp::Phantom.new("file://#{testfile}", { :margin => "2cm" }, { })
       @result  = @phantom.to_pdf("#{Dir.tmpdir}/test.pdf")
     end
@@ -86,7 +106,7 @@ describe Shrimp::Phantom do
   end
 
   context "rendering to a String" do
-    before(:all) do
+    before do
       phantom = Shrimp::Phantom.new("file://#{testfile}", { :margin => "2cm" }, { })
       @result = phantom.to_string("#{Dir.tmpdir}/test.pdf")
     end
@@ -121,7 +141,6 @@ describe Shrimp::Phantom do
   end
 
   context "Error Bang!" do
-
     it "should be unable to load the address" do
       phantom = Shrimp::Phantom.new("file:///foo/bar")
       expect { phantom.run! }.to raise_error Shrimp::RenderingError
