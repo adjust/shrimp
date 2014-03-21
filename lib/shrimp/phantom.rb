@@ -1,5 +1,7 @@
 require 'uri'
 require 'json'
+require 'shellwords'
+
 module Shrimp
   class NoExecutableError < StandardError
     def initialize
@@ -25,6 +27,13 @@ module Shrimp
     attr_accessor :source, :configuration, :outfile
     attr_reader :options, :cookies, :result, :error
     SCRIPT_FILE = File.expand_path('../rasterize.js', __FILE__)
+
+    class << self
+      def quote_arg(arg)
+        # "'#{arg.gsub("'", %q(\\\'))}'"
+        "'#{arg.gsub("'", %q('"'"'))}'"
+      end
+    end
 
     # Public: Runs the phantomjs binary
     #
@@ -58,7 +67,22 @@ module Shrimp
       viewport_width, viewport_height   = options[:viewport_width], options[:viewport_height]
       @outfile                          ||= "#{options[:tmpdir]}/#{Digest::MD5.hexdigest((Time.now.to_i + rand(9001)).to_s)}.pdf"
       command_config_file               = "--config=#{options[:command_config_file]}"
-      [Shrimp.configuration.phantomjs, command_config_file, SCRIPT_FILE, @source.to_s, @outfile, format, zoom, margin, orientation, cookie_file, rendering_time, timeout, viewport_width, viewport_height ].join(" ")
+      [
+        Shrimp.configuration.phantomjs,
+        command_config_file,
+        SCRIPT_FILE,
+        @source.to_s.shellescape,
+        @outfile,
+        format,
+        zoom,
+        margin,
+        orientation,
+        cookie_file,
+        rendering_time,
+        timeout,
+        viewport_width,
+        viewport_height
+      ].join(" ")
     end
 
     # Public: initializes a new Phantom Object
@@ -124,6 +148,7 @@ module Shrimp
     end
 
     private
+
     def dump_cookies
       host = @source.url? ? URI::parse(@source.to_s).host : "/"
       json = @cookies.inject([]) { |a, (k, v)| a.push({ :name => k, :value => v, :domain => host }); a }.to_json
