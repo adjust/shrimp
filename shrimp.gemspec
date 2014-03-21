@@ -19,7 +19,7 @@ Gem::Specification.new do |gem|
   gem.requirements << 'phantomjs, v1.6 or greater'
   gem.add_runtime_dependency "json"
 
-  # Developmnet Dependencies
+  # Development Dependencies
   gem.add_development_dependency(%q<rake>, [">=0.9.2"])
   gem.add_development_dependency(%q<rspec>, [">= 2.2.0"])
   gem.add_development_dependency(%q<rack-test>, [">= 0.5.6"])
