@@ -70,6 +70,24 @@ describe Shrimp::Middleware do
       get '/test.pdf'
       @middleware.send(:render_to).should match (Regexp.new("^#{options[:out_path]}"))
     end
+
+    it "should be the same path if the URLs are the same" do
+      get '/test.pdf'
+      first_render_to = @middleware.send(:render_to)
+      get '/test.pdf'
+      second_render_to = @middleware.send(:render_to)
+
+      first_render_to.should eq second_render_to
+    end
+
+    it "should be a different path when the URL parameters differ" do
+      get '/test.pdf'
+      first_render_to = @middleware.send(:render_to)
+      get '/test.pdf?x=42'
+      second_render_to = @middleware.send(:render_to)
+
+      first_render_to.should_not eq second_render_to
+    end
   end
 
   describe "#render_as_pdf?" do
