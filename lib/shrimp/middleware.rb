@@ -96,30 +96,43 @@ module Shrimp
     end
 
     def render_as_pdf?
-      request_path_is_pdf = !!@request.path.match(%r{\.pdf$})
+      return false unless request_path_is_pdf?
 
-      if request_path_is_pdf && @conditions[:only]
-        rules = [@conditions[:only]].flatten
-        rules.any? do |pattern|
-          if pattern.is_a?(Regexp)
-            @request.path =~ pattern
-          else
-            @request.path[0, pattern.length] == pattern
-          end
-        end
-      elsif request_path_is_pdf && @conditions[:except]
-        rules = [@conditions[:except]].flatten
-        rules.map do |pattern|
-          if pattern.is_a?(Regexp)
-            return false if @request.path =~ pattern
-          else
-            return false if @request.path[0, pattern.length] == pattern
-          end
-        end
-        return true
+      if @conditions[:only]
+        path_is_in_only_conditions?
+      elsif @conditions[:except]
+        path_is_not_in_except_conditions?
       else
-        request_path_is_pdf
+        true
       end
+    end
+
+    def path_is_in_only_conditions?
+      rules = [@conditions[:only]].flatten
+      path_is_in_rules?(rules)
+    end
+
+    def path_is_not_in_except_conditions?
+      rules = [@conditions[:except]].flatten
+      !path_is_in_rules?(rules)
+    end
+
+    def path_is_in_rules?(rules)
+      rules.any? do |pattern|
+        path_matches_pattern?(pattern)
+      end
+    end
+
+    def path_matches_pattern?(pattern)
+      if pattern.is_a?(Regexp)
+        @request.path =~ pattern
+      else
+        @request.path[0, pattern.length] == pattern
+      end
+    end
+
+    def request_path_is_pdf?
+      !!@request.path.match(%r{\.pdf$})
     end
 
     def concat(accepts, type)
