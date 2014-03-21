@@ -81,6 +81,13 @@ describe Shrimp::Middleware do
         end
       end
 
+      context "the URL contains .pdf and parameters" do
+        it "should render as pdf" do
+          get '/test.pdf?x=42'
+          @middleware.send(:'render_as_pdf?').should be true
+        end
+      end
+
       context "the URL doesn't contain .pdf" do
         it "should skip pdf rendering" do
           get 'http://www.example.org/test'
@@ -133,6 +140,22 @@ describe Shrimp::Middleware do
           get '/secret/test.pdf'
           @middleware.send(:'render_as_pdf?').should be false
         end
+      end
+    end
+  end
+
+  describe "#phantom_request_url" do
+    context "when the URL has no parameters" do
+      it "removes the .pdf extension" do
+        get 'http://example.org/test.pdf'
+        @middleware.send(:phantom_request_url).should eq 'http://example.org/test'
+      end
+    end
+
+    context "when the URL has parameters" do
+      it "it preserves the parameters but removes the .pdf extension" do
+        get 'http://example.org/test.pdf?x=42'
+        @middleware.send(:phantom_request_url).should eq 'http://example.org/test?x=42'
       end
     end
   end

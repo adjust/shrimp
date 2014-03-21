@@ -54,7 +54,11 @@ module Shrimp
 
     # Private: start phantom rendering in a separate process
     def fire_phantom
-      Process::detach fork { Phantom.new(@request.url.sub(%r{\.pdf$}, ''), @options, @request.cookies).to_pdf(render_to) }
+      Process::detach fork { Phantom.new(phantom_request_url, @options, @request.cookies).to_pdf(render_to) }
+    end
+
+    def phantom_request_url
+      @request.url.sub(%r{\.pdf(\?.*)?$}, '\1')
     end
 
     def render_to
