@@ -6,7 +6,7 @@ end
 
 def options
   { :margin          => "1cm", :out_path => Dir.tmpdir,
-    :polling_offset  => 10, :polling_interval => 1, :cache_ttl => 3600,
+    :polling_offset  => 10, :polling_interval => 1, :cache_ttl => 1,
     :request_timeout => 1 }
 end
 
