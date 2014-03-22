@@ -188,4 +188,11 @@ describe Shrimp::Middleware do
       end
     end
   end
+
+  describe "#phantom_session" do
+    it "uses the file name without a path as key" do
+      get 'http://example.org/test.pdf'
+      @middleware.send(:phantom_session).keys.first.should match(/\A[[:alnum:]]+\.pdf\z/)
+    end
+  end
 end

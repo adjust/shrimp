@@ -58,9 +58,12 @@ module Shrimp
     end
 
     def render_to
-      file_name = Digest::MD5.hexdigest(@request.url) + ".pdf"
       file_path = @options[:out_path]
-      "#{file_path}/#{file_name}"
+      "#{file_path}/#{render_file_name}"
+    end
+
+    def render_file_name
+      Digest::MD5.hexdigest(@request.url) + ".pdf"
     end
 
     def already_rendered?
@@ -71,23 +74,24 @@ module Shrimp
       (Time.now - File.new(render_to).mtime) <= ttl
     end
 
+    def phantom_session
+      @request.session["phantom-rendering"] ||= { }
+    end
+
     def remove_rendering_flag
-      @request.session["phantom-rendering"] ||={ }
-      @request.session["phantom-rendering"].delete(render_to)
+      phantom_session.delete(render_file_name)
     end
 
     def set_rendering_flag
-      @request.session["phantom-rendering"]            ||={ }
-      @request.session["phantom-rendering"][render_to] = Time.now
+      phantom_session[render_file_name] = Time.now
     end
 
     def rendering_timed_out?
-      Time.now - @request.session["phantom-rendering"][render_to] > @options[:request_timeout]
+      Time.now - phantom_session[render_file_name] > @options[:request_timeout]
     end
 
     def rendering_in_progress?
-      @request.session["phantom-rendering"]||={ }
-      @request.session["phantom-rendering"][render_to]
+      phantom_session[render_file_name]
     end
 
     def render_as_pdf?
