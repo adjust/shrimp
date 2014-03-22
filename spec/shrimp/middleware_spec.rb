@@ -17,7 +17,7 @@ def mock_app(options = { }, conditions = { })
   }
 
   @middleware = Shrimp::Middleware.new(main_app, options, conditions)
-  @app        = Rack::Session::Cookie.new(@middleware, :key => 'rack.session')
+  @app        = Rack::Session::Cookie.new(@middleware, :key => 'rack.session', :secret => "secret")
 end
 
 
