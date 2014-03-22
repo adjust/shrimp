@@ -63,6 +63,17 @@ describe Shrimp::Middleware do
       last_response.status.should eq 200
       last_response.body.should eq "Hello World"
     end
+
+    it "should return HTTP 200 after rendering as AJAX request" do
+      mock_file = double(File, :read => "Hello World", :close => true, :mtime => Time.now)
+      File.should_receive(:'exists?').and_return true
+      File.should_receive(:'size').and_return 1000
+      File.should_receive(:'new').and_return mock_file
+
+      get '/test.pdf', nil, {'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest'}
+
+      last_response.status.should eq 200
+    end
   end
 
   describe "#render_to" do

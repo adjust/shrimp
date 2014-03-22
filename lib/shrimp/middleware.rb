@@ -17,32 +17,28 @@ module Shrimp
           if File.size(render_to) == 0
             File.delete(render_to)
             remove_rendering_flag
-            return error_response("PDF file invalid")
+            return Response.error("PDF file invalid")
           end
-          return ready_response if env['HTTP_X_REQUESTED_WITH']
+          return Response.ready(@request.path) if env['HTTP_X_REQUESTED_WITH']
           file = File.open(render_to, "rb")
           body = file.read
           file.close
           File.delete(render_to) if @options[:cache_ttl] == 0
           remove_rendering_flag
-          response                  = [body]
-          headers                   = { }
-          headers["Content-Length"] = (body.respond_to?(:bytesize) ? body.bytesize : body.size).to_s
-          headers["Content-Type"]   = "application/pdf"
-          [200, headers, response]
+          Response.file(body)
         else
           if rendering_in_progress?
             if rendering_timed_out?
               remove_rendering_flag
-              error_response("Rendering timeout")
+              Response.error("Rendering timeout")
             else
-              reload_response(@options[:polling_interval])
+              Response.reload(@options[:polling_interval])
             end
           else
             File.delete(render_to) if already_rendered?
             set_rendering_flag
             fire_phantom
-            reload_response(@options[:polling_offset])
+            Response.reload(@options[:polling_offset])
           end
         end
       else
@@ -132,56 +128,6 @@ module Shrimp
 
     def request_path_is_pdf?
       !!@request.path.match(%r{\.pdf$})
-    end
-
-    def reload_response(interval=1)
-      body = <<-HTML.gsub(/[ \n]+/, ' ').strip
-          <html>
-          <head>
-        </head>
-          <body onLoad="setTimeout(function(){ window.location.reload()}, #{interval * 1000});">
-          <h2>Preparing pdf... </h2>
-          </body>
-        </ html>
-      HTML
-      headers                   = { }
-      headers["Content-Length"] = body.size.to_s
-      headers["Content-Type"]   = "text/html"
-      headers["Retry-After"]    = interval.to_s
-
-      [503, headers, [body]]
-    end
-
-    def ready_response
-      body = <<-HTML.gsub(/[ \n]+/, ' ').strip
-        <html>
-        <head>
-        </head>
-        <body>
-        <a href="#{@request.path}">PDF ready here</a>
-        </body>
-      </ html>
-      HTML
-      headers                   = { }
-      headers["Content-Length"] = body.size.to_s
-      headers["Content-Type"]   = "text/html"
-      [200, headers, [body]]
-    end
-
-    def error_response(message)
-      body = <<-HTML.gsub(/[ \n]+/, ' ').strip
-        <html>
-        <head>
-        </head>
-        <body>
-        <h2>Sorry request timed out... #{message}</h2>
-        </body>
-      </ html>
-      HTML
-      headers                   = { }
-      headers["Content-Length"] = body.size.to_s
-      headers["Content-Type"]   = "text/html"
-      [504, headers, [body]]
     end
   end
 end
