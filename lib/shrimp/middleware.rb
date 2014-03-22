@@ -75,7 +75,6 @@ module Shrimp
       (Time.now - File.new(render_to).mtime) <= ttl
     end
 
-
     def remove_rendering_flag
       @request.session["phantom-rendering"] ||={ }
       @request.session["phantom-rendering"].delete(render_to)
@@ -133,10 +132,6 @@ module Shrimp
 
     def request_path_is_pdf?
       !!@request.path.match(%r{\.pdf$})
-    end
-
-    def concat(accepts, type)
-      (accepts || '').split(',').unshift(type).compact.join(',')
     end
 
     def reload_response(interval=1)
