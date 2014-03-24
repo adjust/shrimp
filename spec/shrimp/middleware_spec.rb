@@ -173,26 +173,10 @@ describe Shrimp::Middleware do
     end
   end
 
-  describe "#phantom_request_url" do
-    context "when the URL has no parameters" do
-      it "removes the .pdf extension" do
-        get 'http://example.org/test.pdf'
-        @middleware.send(:phantom_request_url).should eq 'http://example.org/test'
-      end
-    end
-
-    context "when the URL has parameters" do
-      it "it preserves the parameters but removes the .pdf extension" do
-        get 'http://example.org/test.pdf?x=42'
-        @middleware.send(:phantom_request_url).should eq 'http://example.org/test?x=42'
-      end
-    end
-  end
-
-  describe "#phantom_session" do
+  describe "#render_file_name" do
     it "uses the file name without a path as key" do
       get 'http://example.org/test.pdf'
-      @middleware.send(:phantom_session).keys.first.should match(/\A[[:alnum:]]+\.pdf\z/)
+      @middleware.send(:render_file_name).should match(/\A[[:alnum:]]+\.pdf\z/)
     end
   end
 end

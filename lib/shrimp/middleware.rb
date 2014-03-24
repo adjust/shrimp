@@ -1,4 +1,5 @@
 require 'shrimp/conditions'
+require 'shrimp/phantom_request'
 
 module Shrimp
   class Middleware
@@ -13,7 +14,8 @@ module Shrimp
     end
 
     def call(env)
-      @request = Rack::Request.new(env)
+      @request = PhantomRequest.new(env)
+
       if render_as_pdf?
         render_pdf
       else
@@ -26,7 +28,7 @@ module Shrimp
     def render_pdf
       if pdf_ready?
         send_pdf
-      elsif rendering_in_progress?
+      elsif @request.rendering_in_progress?
         wait_for_rendering
       else
         start_rendering
@@ -40,7 +42,7 @@ module Shrimp
     def send_pdf
       if File.zero?(render_to)
         File.delete(render_to)
-        remove_rendering_flag
+        @request.remove_rendering_flag
         return Response.error("PDF file invalid")
       end
 
@@ -48,7 +50,7 @@ module Shrimp
 
       body = read_pdf_contents
       File.delete(render_to) if @options[:cache_ttl] == 0
-      remove_rendering_flag
+      @request.remove_rendering_flag
       Response.file(body)
     end
 
@@ -61,7 +63,7 @@ module Shrimp
 
     def wait_for_rendering
       if rendering_timed_out?
-        remove_rendering_flag
+        @request.remove_rendering_flag
         Response.error("Rendering timeout")
       else
         Response.reload(@options[:polling_interval])
@@ -70,18 +72,14 @@ module Shrimp
 
     def start_rendering
       File.delete(render_to) if already_rendered?
-      set_rendering_flag
+      @request.set_rendering_flag
       fire_phantom
       Response.reload(@options[:polling_offset])
     end
 
     # Private: start phantom rendering in a separate process
     def fire_phantom
-      Process::detach fork { Phantom.new(phantom_request_url, @options, @request.cookies).to_pdf(render_to) }
-    end
-
-    def phantom_request_url
-      @request.url.sub(%r{\.pdf(\?.*)?$}, '\1')
+      Process::detach fork { Phantom.new(@request.phantom_request_url, @options, @request.cookies).to_pdf(render_to) }
     end
 
     def render_to
@@ -90,7 +88,7 @@ module Shrimp
     end
 
     def render_file_name
-      Digest::MD5.hexdigest(@request.url) + ".pdf"
+      "#{@request.session_key}.pdf"
     end
 
     def already_rendered?
@@ -101,36 +99,16 @@ module Shrimp
       (Time.now - File.new(render_to).mtime) <= ttl
     end
 
-    def phantom_session
-      @request.session["phantom-rendering"] ||= { }
-    end
-
-    def remove_rendering_flag
-      phantom_session.delete(render_file_name)
-    end
-
-    def set_rendering_flag
-      phantom_session[render_file_name] = Time.now
-    end
-
     def rendering_timed_out?
-      Time.now - phantom_session[render_file_name] > @options[:request_timeout]
-    end
-
-    def rendering_in_progress?
-      phantom_session[render_file_name]
+      @request.rendering_timeout? @options[:request_timeout]
     end
 
     def render_as_pdf?
-      if request_path_is_pdf?
+      if @request.path_is_pdf?
         @conditions.path_is_valid? @request.path
       else
         false
       end
-    end
-
-    def request_path_is_pdf?
-      !!@request.path.match(%r{\.pdf$})
     end
   end
 end
