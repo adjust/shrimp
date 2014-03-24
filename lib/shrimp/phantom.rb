@@ -28,13 +28,6 @@ module Shrimp
     attr_reader :options, :cookies, :result, :error
     SCRIPT_FILE = File.expand_path('../rasterize.js', __FILE__)
 
-    class << self
-      def quote_arg(arg)
-        # "'#{arg.gsub("'", %q(\\\'))}'"
-        "'#{arg.gsub("'", %q('"'"'))}'"
-      end
-    end
-
     # Public: Runs the phantomjs binary
     #
     # Returns the stdout output of phantomjs
