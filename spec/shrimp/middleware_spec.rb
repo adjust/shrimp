@@ -56,7 +56,7 @@ describe Shrimp::Middleware do
     it "should return a pdf with 200 after rendering" do
       mock_file = double(File, :read => "Hello World", :close => true, :mtime => Time.now)
       File.should_receive(:'exists?').and_return true
-      File.should_receive(:'size').and_return 1000
+      File.should_receive(:'zero?').and_return false
       File.should_receive(:'open').and_return mock_file
       File.should_receive(:'new').and_return mock_file
       get '/test.pdf'
@@ -67,7 +67,7 @@ describe Shrimp::Middleware do
     it "should return HTTP 200 after rendering as AJAX request" do
       mock_file = double(File, :read => "Hello World", :close => true, :mtime => Time.now)
       File.should_receive(:'exists?').and_return true
-      File.should_receive(:'size').and_return 1000
+      File.should_receive(:'zero?').and_return false
       File.should_receive(:'new').and_return mock_file
 
       get '/test.pdf', nil, {'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest'}

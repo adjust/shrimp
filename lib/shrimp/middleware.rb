@@ -15,40 +15,65 @@ module Shrimp
     def call(env)
       @request = Rack::Request.new(env)
       if render_as_pdf?
-        if already_rendered? && (up_to_date?(@options[:cache_ttl]) || @options[:cache_ttl] == 0)
-          if File.size(render_to) == 0
-            File.delete(render_to)
-            remove_rendering_flag
-            return Response.error("PDF file invalid")
-          end
-          return Response.ready(@request.path) if env['HTTP_X_REQUESTED_WITH']
-          file = File.open(render_to, "rb")
-          body = file.read
-          file.close
-          File.delete(render_to) if @options[:cache_ttl] == 0
-          remove_rendering_flag
-          Response.file(body)
-        else
-          if rendering_in_progress?
-            if rendering_timed_out?
-              remove_rendering_flag
-              Response.error("Rendering timeout")
-            else
-              Response.reload(@options[:polling_interval])
-            end
-          else
-            File.delete(render_to) if already_rendered?
-            set_rendering_flag
-            fire_phantom
-            Response.reload(@options[:polling_offset])
-          end
-        end
+        render_pdf
       else
         @app.call(env)
       end
     end
 
     private
+
+    def render_pdf
+      if pdf_ready?
+        send_pdf
+      elsif rendering_in_progress?
+        wait_for_rendering
+      else
+        start_rendering
+      end
+    end
+
+    def pdf_ready?
+      already_rendered? && (up_to_date?(@options[:cache_ttl]) || @options[:cache_ttl] == 0)
+    end
+
+    def send_pdf
+      if File.zero?(render_to)
+        File.delete(render_to)
+        remove_rendering_flag
+        return Response.error("PDF file invalid")
+      end
+
+      return Response.ready(@request.path) if @request.xhr?
+
+      body = read_pdf_contents
+      File.delete(render_to) if @options[:cache_ttl] == 0
+      remove_rendering_flag
+      Response.file(body)
+    end
+
+    def read_pdf_contents
+      file = File.open(render_to, "rb")
+      body = file.read
+      file.close
+      body
+    end
+
+    def wait_for_rendering
+      if rendering_timed_out?
+        remove_rendering_flag
+        Response.error("Rendering timeout")
+      else
+        Response.reload(@options[:polling_interval])
+      end
+    end
+
+    def start_rendering
+      File.delete(render_to) if already_rendered?
+      set_rendering_flag
+      fire_phantom
+      Response.reload(@options[:polling_offset])
+    end
 
     # Private: start phantom rendering in a separate process
     def fire_phantom
