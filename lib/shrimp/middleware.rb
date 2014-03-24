@@ -1,9 +1,11 @@
+require 'shrimp/conditions'
+
 module Shrimp
   class Middleware
     def initialize(app, options = { }, conditions = { })
       @app                        = app
       @options                    = options
-      @conditions                 = conditions
+      @conditions                 = Conditions.new(conditions)
       @options[:polling_interval] ||= 1
       @options[:polling_offset]   ||= 1
       @options[:cache_ttl]        ||= 1
@@ -95,38 +97,10 @@ module Shrimp
     end
 
     def render_as_pdf?
-      return false unless request_path_is_pdf?
-
-      if @conditions[:only]
-        path_is_in_only_conditions?
-      elsif @conditions[:except]
-        path_is_not_in_except_conditions?
+      if request_path_is_pdf?
+        @conditions.path_is_valid? @request.path
       else
-        true
-      end
-    end
-
-    def path_is_in_only_conditions?
-      rules = [@conditions[:only]].flatten
-      path_is_in_rules?(rules)
-    end
-
-    def path_is_not_in_except_conditions?
-      rules = [@conditions[:except]].flatten
-      !path_is_in_rules?(rules)
-    end
-
-    def path_is_in_rules?(rules)
-      rules.any? do |pattern|
-        path_matches_pattern?(pattern)
-      end
-    end
-
-    def path_matches_pattern?(pattern)
-      if pattern.is_a?(Regexp)
-        @request.path =~ pattern
-      else
-        @request.path[0, pattern.length] == pattern
+        false
       end
     end
 
