@@ -60,15 +60,20 @@ Shrimp.configure do |config|
   # increase if you need to render very complex pages
   # config.rendering_time   = 1000
 
-  # change the viewport size.  If you rendering pages that have 
+  # change the viewport size.  If you rendering pages that have
   # flexible page width and height then you may need to set this
   # to enforce a specific size
-  # config.viewport_width = 600 
-  # config.viewport_height = 600
+  # config.viewport_width     = 600
+  # config.viewport_height    = 600
 
   # the timeout for the phantomjs rendering process in ms
   # this needs always to be higher than rendering_time
-  # config.rendering_timeout       = 90000
+  # config.rendering_timeout  = 90000
+
+  # maximum number of redirects to follow
+  # by default Shrimp does not follow any redirects which means that
+  # if the server responds with non HTTP 200 an error will be returned
+  # config.max_redirect_count = 0
 
   # the path to a json configuration file for command-line options
   # config.command_config_file = "#{Rails.root.join('config', 'shrimp', 'config.json')}"
@@ -153,7 +158,7 @@ To include some fancy Ajax stuff with jquery
         return window.location.assign(url);
       },
       504: function() {
-       console.log("Shit's beeing wired")
+       console.log("Shit's being wired")
       },
       503: function(jqXHR, textStatus, errorThrown) {
         var wait;

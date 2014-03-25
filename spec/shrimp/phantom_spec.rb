@@ -58,10 +58,11 @@ describe Shrimp::Phantom do
   end
 
   it "should parse options into a cmd line" do
-    phantom = Shrimp::Phantom.new("file://#{testfile}", { :margin => "2cm" }, { }, "#{Dir.tmpdir}/test.pdf")
+    phantom = Shrimp::Phantom.new("file://#{testfile}", { :margin => "2cm", :max_redirect_count => 10 }, { }, "#{Dir.tmpdir}/test.pdf")
     phantom.cmd.should include "test.pdf A4 1 2cm portrait"
     phantom.cmd.should include "file://#{testfile}"
     phantom.cmd.should include "lib/shrimp/rasterize.js"
+    phantom.cmd.should end_with " 10"
   end
 
   it "should properly escape arguments" do
@@ -130,7 +131,7 @@ describe Shrimp::Phantom do
     it "should be unable to load the address" do
       phantom = Shrimp::Phantom.new("file:///foo/bar")
       phantom.run
-      phantom.error.should include "Unable to load the address"
+      phantom.error.should include "Error opening /foo/bar: No such file or directory (URL: file:///foo/bar)"
     end
 
     it "should be unable to copy file" do
