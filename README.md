@@ -152,7 +152,7 @@ To include some fancy Ajax stuff with jquery
 
 ```js
 
- var url = '/my_page.pdf'
+ var url = '/my_page.pdf';
  var statusCodes = {
       200: function() {
         return window.location.assign(url);
@@ -176,6 +176,12 @@ To include some fancy Ajax stuff with jquery
     statusCode: statusCodes
   })
 
+```
+
+The URL in the above example can also contain a query string:
+
+```js
+var url = '/my_page.pdf?answer=42';
 ```
 
 ## Contributing
