@@ -58,6 +58,7 @@ module Shrimp
       format, zoom, margin, orientation = options[:format], options[:zoom], options[:margin], options[:orientation]
       rendering_time, timeout           = options[:rendering_time], options[:rendering_timeout]
       viewport_width, viewport_height   = options[:viewport_width], options[:viewport_height]
+      max_redirect_count                = options[:max_redirect_count]
       @outfile                          ||= "#{options[:tmpdir]}/#{Digest::MD5.hexdigest((Time.now.to_i + rand(9001)).to_s)}.pdf"
       command_config_file               = "--config=#{options[:command_config_file]}"
       [
@@ -74,7 +75,8 @@ module Shrimp
         rendering_time,
         timeout,
         viewport_width,
-        viewport_height
+        viewport_height,
+        max_redirect_count
       ].join(" ")
     end
 
