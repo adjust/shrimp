@@ -95,7 +95,7 @@ module Shrimp
     def initialize(url_or_file, options = { }, cookies={ }, outfile = nil)
       @source  = Source.new(url_or_file)
       @options = Shrimp.configuration.default_options.merge(options)
-      @cookies = cookies
+      @cookies = escape_cookies(cookies)
       @outfile = File.expand_path(outfile) if outfile
       raise NoExecutableError.new unless File.exists?(Shrimp.configuration.phantomjs)
     end
@@ -148,6 +148,10 @@ module Shrimp
       host = @source.url? ? URI::parse(@source.to_s).host : "/"
       json = @cookies.inject([]) { |a, (k, v)| a.push({ :name => k, :value => v, :domain => host }); a }.to_json
       File.open("#{options[:tmpdir]}/#{rand}.cookies", 'w') { |f| f.puts json; f }.path
+    end
+    
+    def escape_cookies(cookies)
+      Hash[cookies.map { |key, value| [key, CGI.escape(value)] }]
     end
   end
 end
