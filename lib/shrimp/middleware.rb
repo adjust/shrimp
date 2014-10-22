@@ -1,9 +1,12 @@
+require 'shrimp/conditions'
+require 'shrimp/phantom_request'
+
 module Shrimp
   class Middleware
     def initialize(app, options = { }, conditions = { })
       @app                        = app
       @options                    = options
-      @conditions                 = conditions
+      @conditions                 = Conditions.new(conditions)
       @options[:polling_interval] ||= 1
       @options[:polling_offset]   ||= 1
       @options[:cache_ttl]        ||= 1
@@ -11,40 +14,10 @@ module Shrimp
     end
 
     def call(env)
-      @request = Rack::Request.new(env)
-      if render_as_pdf? #&& headers['Content-Type'] =~ /text\/html|application\/xhtml\+xml/
-        if already_rendered? && (up_to_date?(@options[:cache_ttl]) || @options[:cache_ttl] == 0)
-          if File.size(render_to) == 0
-            File.delete(render_to)
-            remove_rendering_flag
-            return error_response
-          end
-          return ready_response if env['HTTP_X_REQUESTED_WITH']
-          file = File.open(render_to, "rb")
-          body = file.read
-          file.close
-          File.delete(render_to) if @options[:cache_ttl] == 0
-          remove_rendering_flag
-          response                  = [body]
-          headers                   = { }
-          headers["Content-Length"] = (body.respond_to?(:bytesize) ? body.bytesize : body.size).to_s
-          headers["Content-Type"]   = "application/pdf"
-          [200, headers, response]
-        else
-          if rendering_in_progress?
-            if rendering_timed_out?
-              remove_rendering_flag
-              error_response
-            else
-              reload_response(@options[:polling_interval])
-            end
-          else
-            File.delete(render_to) if already_rendered?
-            set_rendering_flag
-            fire_phantom
-            reload_response(@options[:polling_offset])
-          end
-        end
+      @request = PhantomRequest.new(env)
+
+      if render_as_pdf?
+        render_pdf
       else
         @app.call(env)
       end
@@ -52,15 +25,70 @@ module Shrimp
 
     private
 
+    def render_pdf
+      if pdf_ready?
+        send_pdf
+      elsif @request.rendering_in_progress?
+        wait_for_rendering
+      else
+        start_rendering
+      end
+    end
+
+    def pdf_ready?
+      already_rendered? && (up_to_date?(@options[:cache_ttl]) || @options[:cache_ttl] == 0)
+    end
+
+    def send_pdf
+      if File.zero?(render_to)
+        File.delete(render_to)
+        @request.remove_rendering_flag
+        return Response.error("PDF file invalid")
+      end
+
+      return Response.ready(@request.path) if @request.xhr?
+
+      body = read_pdf_contents
+      File.delete(render_to) if @options[:cache_ttl] == 0
+      @request.remove_rendering_flag
+      Response.file(body)
+    end
+
+    def read_pdf_contents
+      file = File.open(render_to, "rb")
+      body = file.read
+      file.close
+      body
+    end
+
+    def wait_for_rendering
+      if rendering_timed_out?
+        @request.remove_rendering_flag
+        Response.error("Rendering timeout")
+      else
+        Response.reload(@options[:polling_interval])
+      end
+    end
+
+    def start_rendering
+      File.delete(render_to) if already_rendered?
+      @request.set_rendering_flag
+      fire_phantom
+      Response.reload(@options[:polling_offset])
+    end
+
     # Private: start phantom rendering in a separate process
     def fire_phantom
-      Process::detach fork { Phantom.new(@request.url.sub(%r{\.pdf$}, ''), @options, @request.cookies).to_pdf(render_to) }
+      Process::detach fork { Phantom.new(@request.phantom_request_url, @options, @request.cookies).to_pdf(render_to) }
     end
 
     def render_to
-      file_name = Digest::MD5.hexdigest(@request.path) + ".pdf"
       file_path = @options[:out_path]
-      "#{file_path}/#{file_name}"
+      "#{file_path}/#{render_file_name}"
+    end
+
+    def render_file_name
+      "#{@request.session_key}.pdf"
     end
 
     def already_rendered?
@@ -71,105 +99,16 @@ module Shrimp
       (Time.now - File.new(render_to).mtime) <= ttl
     end
 
-
-    def remove_rendering_flag
-      @request.session["phantom-rendering"] ||={ }
-      @request.session["phantom-rendering"].delete(render_to)
-    end
-
-    def set_rendering_flag
-      @request.session["phantom-rendering"]            ||={ }
-      @request.session["phantom-rendering"][render_to] = Time.now
-    end
-
     def rendering_timed_out?
-      Time.now - @request.session["phantom-rendering"][render_to] > @options[:request_timeout]
-    end
-
-    def rendering_in_progress?
-      @request.session["phantom-rendering"]||={ }
-      @request.session["phantom-rendering"][render_to]
+      @request.rendering_timeout? @options[:request_timeout]
     end
 
     def render_as_pdf?
-      request_path_is_pdf = !!@request.path.match(%r{\.pdf$})
-
-      if request_path_is_pdf && @conditions[:only]
-        rules = [@conditions[:only]].flatten
-        rules.any? do |pattern|
-          if pattern.is_a?(Regexp)
-            @request.path =~ pattern
-          else
-            @request.path[0, pattern.length] == pattern
-          end
-        end
-      elsif request_path_is_pdf && @conditions[:except]
-        rules = [@conditions[:except]].flatten
-        rules.map do |pattern|
-          if pattern.is_a?(Regexp)
-            return false if @request.path =~ pattern
-          else
-            return false if @request.path[0, pattern.length] == pattern
-          end
-        end
-        return true
+      if @request.path_is_pdf?
+        @conditions.path_is_valid? @request.path
       else
-        request_path_is_pdf
+        false
       end
-    end
-
-    def concat(accepts, type)
-      (accepts || '').split(',').unshift(type).compact.join(',')
-    end
-
-    def reload_response(interval=1)
-      body = <<-HTML.gsub(/[ \n]+/, ' ').strip
-          <html>
-          <head>
-        </head>
-          <body onLoad="setTimeout(function(){ window.location.reload()}, #{interval * 1000});">
-          <h2>Preparing pdf... </h2>
-          </body>
-        </ html>
-      HTML
-      headers                   = { }
-      headers["Content-Length"] = body.size.to_s
-      headers["Content-Type"]   = "text/html"
-      headers["Retry-After"]    = interval.to_s
-
-      [503, headers, [body]]
-    end
-
-    def ready_response
-      body = <<-HTML.gsub(/[ \n]+/, ' ').strip
-        <html>
-        <head>
-        </head>
-        <body>
-        <a href="#{@request.path}">PDF ready here</a>
-        </body>
-      </ html>
-      HTML
-      headers                   = { }
-      headers["Content-Length"] = body.size.to_s
-      headers["Content-Type"]   = "text/html"
-      [200, headers, [body]]
-    end
-
-    def error_response
-      body = <<-HTML.gsub(/[ \n]+/, ' ').strip
-        <html>
-        <head>
-        </head>
-        <body>
-        <h2>Sorry request timed out... </h2>
-        </body>
-      </ html>
-      HTML
-      headers                   = { }
-      headers["Content-Length"] = body.size.to_s
-      headers["Content-Type"]   = "text/html"
-      [504, headers, [body]]
     end
   end
 end
