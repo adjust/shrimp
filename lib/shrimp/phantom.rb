@@ -79,7 +79,7 @@ module Shrimp
         max_redirect_count,
         options[:basic_auth_username],
         options[:basic_auth_password]
-      ].join(" ")
+      ].join(" ").rstrip
     end
 
     # Public: initializes a new Phantom Object
