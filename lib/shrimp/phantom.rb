@@ -76,7 +76,9 @@ module Shrimp
         timeout,
         viewport_width,
         viewport_height,
-        max_redirect_count
+        max_redirect_count,
+        options[:basic_auth_username],
+        options[:basic_auth_password]
       ].join(" ")
     end
 
