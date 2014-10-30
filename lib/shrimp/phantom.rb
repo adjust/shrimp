@@ -76,8 +76,10 @@ module Shrimp
         timeout,
         viewport_width,
         viewport_height,
-        max_redirect_count
-      ].join(" ")
+        max_redirect_count,
+        options[:basic_auth_username],
+        options[:basic_auth_password]
+      ].join(" ").rstrip
     end
 
     # Public: initializes a new Phantom Object

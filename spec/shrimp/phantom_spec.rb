@@ -65,6 +65,24 @@ describe Shrimp::Phantom do
     phantom.cmd.should end_with " 10"
   end
 
+  it "should pass basic auth options into cmd line" do
+    basic_auth_username = 'frodo9finger'
+    basic_auth_password = 'foobarbaz'
+    phantom = Shrimp::Phantom.new("file://#{testfile}", {
+      :margin => "2cm",
+      :max_redirect_count => 10,
+      :basic_auth_username => basic_auth_username,
+      :basic_auth_password => basic_auth_password }, { },
+    "#{Dir.tmpdir}/test.pdf"
+    )
+
+    phantom.cmd.should include "test.pdf A4 1 2cm portrait"
+    phantom.cmd.should include "file://#{testfile}"
+    phantom.cmd.should include "lib/shrimp/rasterize.js"
+    phantom.cmd.should include basic_auth_username
+    phantom.cmd.should end_with basic_auth_password
+  end
+
   it "should properly escape arguments" do
     malicious_uri = "file:///hello';shutdown"
     bogus_phantom = Shrimp::Phantom.new(malicious_uri)
