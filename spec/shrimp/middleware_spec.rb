@@ -105,12 +105,12 @@ describe "Conditions" do
 
   context "except" do
     before { mock_app(options, :except => %w(/secret)) }
-    it "render pdf for set only option" do
+    it "render pdf for set except option" do
       get '/invoice/test.pdf'
       @middleware.send(:'render_as_pdf?').should be true
     end
 
-    it "render pdf for set only option" do
+    it "render pdf for set except option" do
       get '/public/test.pdf'
       @middleware.send(:'render_as_pdf?').should be true
     end
