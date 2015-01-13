@@ -120,4 +120,30 @@ describe "Conditions" do
       @middleware.send(:'render_as_pdf?').should be false
     end
   end
+
+  context "only_hosts" do
+    before { mock_app(options, :only_hosts => [%r[^test.example.org]]) }
+    it "render pdf for set only_hosts option" do
+      get '/test.pdf', {}, {'HTTP_HOST' => 'test.example.org' }
+      @middleware.send(:'render_as_pdf?').should be true
+    end
+
+    it "not render pdf for any other hosts" do
+      get '/test.pdf'
+      @middleware.send(:'render_as_pdf?').should be false
+    end
+  end
+
+  context "except_hosts" do
+    before { mock_app(options, :except_hosts => [%r[^test.example.org]]) }
+    it "render pdf for set except_hosts option" do
+      get '/invoice/test.pdf'
+      @middleware.send(:'render_as_pdf?').should be true
+    end
+
+    it "not render pdf for any other hosts" do
+      get '/secret/test.pdf', {}, {'HTTP_HOST' => 'test.example.org' }
+      @middleware.send(:'render_as_pdf?').should be false
+    end
+  end
 end

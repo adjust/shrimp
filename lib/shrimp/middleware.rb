@@ -92,29 +92,33 @@ module Shrimp
     end
 
     def render_as_pdf?
-      request_path_is_pdf = !!@request.path.match(%r{\.pdf$})
+      return false unless request_path_is_pdf
+      return false if only_guard(:only, :path)
+      return false if except_guard(:except, :path)
+      return false if only_guard(:only_hosts, :host)
+      return false if except_guard(:except_hosts, :host)
+      true
+    end
 
-      if request_path_is_pdf && @conditions[:only]
-        rules = [@conditions[:only]].flatten
-        rules.any? do |pattern|
-          if pattern.is_a?(Regexp)
-            @request.path =~ pattern
-          else
-            @request.path[0, pattern.length] == pattern
-          end
+    def request_path_is_pdf
+      !!@request.path.match(%r{\.pdf$})
+    end
+
+    def only_guard(guard, meth)
+      @conditions[guard] && !guard(guard, meth)
+    end
+
+    def except_guard(guard, meth)
+      @conditions[guard] && guard(guard, meth)
+    end
+
+    def guard(guard, meth)
+      [@conditions[guard]].flatten.any? do |pattern|
+        if pattern.is_a?(Regexp)
+          @request.send(meth) =~ pattern
+        else
+          @request.send(meth).send(:[], 0, pattern.length) == pattern
         end
-      elsif request_path_is_pdf && @conditions[:except]
-        rules = [@conditions[:except]].flatten
-        rules.map do |pattern|
-          if pattern.is_a?(Regexp)
-            return false if @request.path =~ pattern
-          else
-            return false if @request.path[0, pattern.length] == pattern
-          end
-        end
-        return true
-      else
-        request_path_is_pdf
       end
     end
 
