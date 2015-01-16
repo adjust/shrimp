@@ -54,6 +54,7 @@ module Shrimp
 
     # Public: Returns the phantom rasterize command
     def cmd
+      timezone                          = "TZ=\"#{Time.zone.name}\""
       cookie_file                       = dump_cookies
       format, zoom, margin, orientation = options[:format], options[:zoom], options[:margin], options[:orientation]
       rendering_time, timeout           = options[:rendering_time], options[:rendering_timeout]
@@ -62,6 +63,7 @@ module Shrimp
       @outfile                          ||= "#{options[:tmpdir]}/#{Digest::MD5.hexdigest((Time.now.to_i + rand(9001)).to_s)}.pdf"
       command_config_file               = "--config=#{options[:command_config_file]}"
       [
+        timezone,
         Shrimp.configuration.phantomjs,
         command_config_file,
         SCRIPT_FILE,
