@@ -7,6 +7,7 @@ module Shrimp
       @options[:polling_interval] ||= 1
       @options[:polling_offset]   ||= 1
       @options[:cache_ttl]        ||= 1
+      @options[:out_path]         ||= Dir.tmpDir
       @options[:request_timeout]  ||= @options[:polling_interval] * 10
     end
 
