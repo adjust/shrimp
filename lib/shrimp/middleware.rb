@@ -163,7 +163,7 @@ module Shrimp
         <head>
         </head>
         <body>
-        <h2>Sorry request timed out... </h2>
+        <h2>Sorry request timed out... Please try again in a few moments</h2>
         </body>
       </ html>
       HTML
