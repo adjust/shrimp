@@ -42,6 +42,17 @@ describe Shrimp::Phantom do
     phantom.outfile.should eq "#{Dir.tmpdir}/test.pdf"
   end
 
+  it "should accept margin provided as a hash of sides" do
+    margin = {
+      top: '4.6mm',
+      right: '4mm',
+      left: '3cm',
+      # bottom: '0cm', # default
+    }
+    phantom = Shrimp::Phantom.new("file://#{testfile}", { :margin => margin }, { }, "#{Dir.tmpdir}/test.pdf")
+    phantom.options[:margin].should eq margin
+  end
+
   it "should render a pdf file" do
     #phantom = Shrimp::Phantom.new("file://#{@path}")
     #phantom.to_pdf("#{Dir.tmpdir}/test.pdf").first should eq "#{Dir.tmpdir}/test.pdf"
@@ -59,7 +70,7 @@ describe Shrimp::Phantom do
 
   it "should parse options into a cmd line" do
     phantom = Shrimp::Phantom.new("file://#{testfile}", { :margin => "2cm", :max_redirect_count => 10 }, { }, "#{Dir.tmpdir}/test.pdf")
-    phantom.cmd.should include "test.pdf A4 1 2cm portrait"
+    phantom.cmd.should include "test.pdf A4 1 '\"2cm\"' portrait"
     phantom.cmd.should include "file://#{testfile}"
     phantom.cmd.should include "lib/shrimp/rasterize.js"
     phantom.cmd.should end_with " 10"
