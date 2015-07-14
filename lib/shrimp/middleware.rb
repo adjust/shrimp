@@ -7,6 +7,7 @@ module Shrimp
       @options[:polling_interval] ||= 1
       @options[:polling_offset]   ||= 1
       @options[:cache_ttl]        ||= 1
+      @options[:out_path]         ||= Dir.tmpDir
       @options[:request_timeout]  ||= @options[:polling_interval] * 10
     end
 
@@ -54,11 +55,12 @@ module Shrimp
 
     # Private: start phantom rendering in a separate process
     def fire_phantom
-      Process::detach fork { Phantom.new(@request.url.sub(%r{\.pdf$}, ''), @options, @request.cookies).to_pdf(render_to) }
+      url = @request.url.sub(%r{\.pdf(\?|$)}, '\1').sub('utf8=%E2%9C%93&', '')
+      Process::detach fork { Phantom.new(url, @options, @request.cookies).to_pdf(render_to) }
     end
 
     def render_to
-      file_name = Digest::MD5.hexdigest(@request.path) + ".pdf"
+      file_name = Digest::MD5.hexdigest(@request.fullpath) + ".pdf"
       file_path = @options[:out_path]
       "#{file_path}/#{file_name}"
     end
@@ -92,7 +94,7 @@ module Shrimp
     end
 
     def render_as_pdf?
-      request_path_is_pdf = !!@request.path.match(%r{\.pdf$})
+      request_path_is_pdf = !!@request.path.match(%r{\.pdf(\?|$)})
 
       if request_path_is_pdf && @conditions[:only]
         rules = [@conditions[:only]].flatten
@@ -162,7 +164,7 @@ module Shrimp
         <head>
         </head>
         <body>
-        <h2>Sorry request timed out... </h2>
+        <h2>Sorry request timed out... Please try again in a few moments</h2>
         </body>
       </ html>
       HTML
