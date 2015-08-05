@@ -62,7 +62,7 @@ describe Shrimp::Phantom do
     phantom.cmd.should include "test.pdf A4 1 2cm portrait"
     phantom.cmd.should include "file://#{testfile}"
     phantom.cmd.should include "lib/shrimp/rasterize.js"
-    phantom.cmd.should end_with " 10"
+    phantom.cmd.should end_with "cm"
   end
 
   it "should properly escape arguments" do
