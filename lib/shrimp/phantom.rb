@@ -163,14 +163,18 @@ module Shrimp
       return nil unless options[:header_content]
 
       a = options[:header_content]
-      a.kind_of?(File) ? a.path : File.open("#{options[:tmpdir]}/#{rand}.header", 'w') { |f| f.puts a; f }.path
+      c = a.kind_of?(File) ? a.read : a
+
+      File.open("#{options[:tmpdir]}/#{rand}.header", 'w') { |f| f.puts c; f }.path
     end
 
     def handle_footer
       return nil unless options[:footer_content]
 
       a = options[:footer_content]
-      a.kind_of?(File) ? a.path : File.open("#{options[:tmpdir]}/#{rand}.footer", 'w') { |f| f.puts a; f }.path
+      c = a.kind_of?(File) ? a.read : a
+
+      File.open("#{options[:tmpdir]}/#{rand}.footer", 'w') { |f| f.puts c; f }.path
     end
   end
 end
