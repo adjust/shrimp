@@ -61,6 +61,11 @@ module Shrimp
       max_redirect_count                = options[:max_redirect_count]
       @outfile                          ||= "#{options[:tmpdir]}/#{Digest::MD5.hexdigest((Time.now.to_i + rand(9001)).to_s)}.pdf"
       command_config_file               = "--config=#{options[:command_config_file]}"
+
+      footer_file = handle_footer || Dir.tmpdir + "/#{rand}"
+      header_file = handle_header || Dir.tmpdir + "/#{rand}"
+      footer_size, header_size = options[:footer_size], options[:header_size]
+
       [
         Shrimp.configuration.phantomjs,
         command_config_file,
@@ -76,7 +81,11 @@ module Shrimp
         timeout,
         viewport_width,
         viewport_height,
-        max_redirect_count
+        max_redirect_count,
+        footer_file,
+        footer_size,
+        header_file,
+        header_size
       ].join(" ")
     end
 
@@ -148,6 +157,20 @@ module Shrimp
       host = @source.url? ? URI::parse(@source.to_s).host : "/"
       json = @cookies.inject([]) { |a, (k, v)| a.push({ :name => k, :value => v, :domain => host }); a }.to_json
       File.open("#{options[:tmpdir]}/#{rand}.cookies", 'w') { |f| f.puts json; f }.path
+    end
+
+    def handle_header
+      return nil unless options[:header_content]
+
+      a = options[:header_content]
+      a.kind_of?(File) ? a.path : File.open("#{options[:tmpdir]}/#{rand}.header", 'w') { |f| f.puts a; f }.path
+    end
+
+    def handle_footer
+      return nil unless options[:footer_content]
+
+      a = options[:footer_content]
+      a.kind_of?(File) ? a.path : File.open("#{options[:tmpdir]}/#{rand}.footer", 'w') { |f| f.puts a; f }.path
     end
   end
 end
