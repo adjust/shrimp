@@ -66,7 +66,7 @@ module Shrimp
     end
 
     def rendering_started_at
-      @request.session["phantom-rendering"][render_to]
+      @request.session["phantom-rendering"][render_to].to_time
     end
 
     def rendering_timed_out?
