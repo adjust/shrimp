@@ -13,13 +13,13 @@ module Shrimp
     def render_as_pdf(env)
       if already_rendered? && (up_to_date?(@options[:cache_ttl]) || @options[:cache_ttl] == 0)
         if File.size(render_to) == 0
-          File.delete(render_to)
+          delete_tmp_files
           remove_rendering_flag
           return error_response
         end
         return ready_response if env['HTTP_X_REQUESTED_WITH']
         body = pdf_body()
-        File.delete(render_to) if @options[:cache_ttl] == 0
+        delete_tmp_files if @options[:cache_ttl] == 0
         remove_rendering_flag
         headers = pdf_headers(body)
         [200, headers, [body]]
@@ -32,7 +32,7 @@ module Shrimp
             reload_response(@options[:polling_interval])
           end
         else
-          File.delete(render_to) if already_rendered?
+          delete_tmp_files if already_rendered?
           set_rendering_flag
           # Start PhantomJS rendering in a separate process and then immediately render a web page
           # that continuously reloads (polls) until the rendering is complete.
@@ -47,13 +47,17 @@ module Shrimp
     private
 
     def already_rendered?
-      File.exists?(render_to)
+      File.exists?(render_to_done) && File.exists?(render_to)
     end
 
     def up_to_date?(ttl = 30)
       (Time.now - File.new(render_to).mtime) <= ttl
     end
 
+    def delete_tmp_files
+      File.delete(render_to)
+      File.delete(render_to_done)
+    end
 
     def remove_rendering_flag
       @request.session["phantom-rendering"] ||={ }

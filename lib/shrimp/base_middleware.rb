@@ -56,6 +56,10 @@ module Shrimp
       "#{file_path}/#{file_name}"
     end
 
+    def render_to_done
+      "#{render_to}.done"
+    end
+
     # The URL for the HTML-formatted web page that we are converting into a PDF.
     def html_url
       @request.url.sub(%r<\.pdf(\?|$)>, '\1')
@@ -69,6 +73,7 @@ module Shrimp
         @phantom = phantom
         phantom.to_pdf(render_to)
         log_render_pdf_completion
+        File.open(render_to_done, 'w') { |f| f.write('done') } unless @phantom.error?
       end
     end
 
