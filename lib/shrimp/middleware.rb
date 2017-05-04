@@ -36,7 +36,9 @@ module Shrimp
           set_rendering_flag
           # Start PhantomJS rendering in a separate process and then immediately render a web page
           # that continuously reloads (polls) until the rendering is complete.
-          Process::detach fork {
+          # Chuck: using Thread.new instead of Process::detach fork because Process fork will cause
+          # database disconnection when the forked process ended
+          Thread.new {
             render_pdf
           }
           reload_response(@options[:polling_offset])
