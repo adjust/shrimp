@@ -71,7 +71,7 @@ module Shrimp
     end
 
     def match_page_load_error
-      error.to_s.match /^(null|\S+) Unable to load the address!$/
+      error.to_s.match /^.* \(HTTP (null|\S+)\).*/
     end
     def page_load_error?
       !!match_page_load_error
@@ -98,9 +98,26 @@ module Shrimp
       format, zoom, margin, orientation = options[:format], options[:zoom], options[:margin], options[:orientation]
       rendering_time, timeout           = options[:rendering_time], options[:rendering_timeout]
       viewport_width, viewport_height   = options[:viewport_width], options[:viewport_height]
+      max_redirect_count                = options[:max_redirect_count]
       @outfile                          ||= "#{options[:tmpdir]}/#{Digest::MD5.hexdigest((Time.now.to_i + rand(9001)).to_s)}.pdf"
       command_config_file               = "--config=#{options[:command_config_file]}"
-      [Shrimp.config.phantomjs, command_config_file, SCRIPT_FILE, @source.to_s, @outfile, format, zoom, margin, orientation, cookie_file, rendering_time, timeout, viewport_width, viewport_height ].map(&:to_s)
+      [
+        Shrimp.configuration.phantomjs,
+        command_config_file,
+        SCRIPT_FILE,
+        @source.to_s,
+        @outfile,
+        format,
+        zoom,
+        margin,
+        orientation,
+        cookie_file,
+        rendering_time,
+        timeout,
+        viewport_width,
+        viewport_height,
+        max_redirect_count
+      ].map(&:to_s)
     end
 
     # Public: initializes a new Phantom Object
@@ -166,6 +183,7 @@ module Shrimp
     end
 
     private
+
     def dump_cookies
       host = @source.url? ? URI::parse(@source.to_s).host : "/"
       json = @cookies.inject([]) { |a, (k, v)| a.push({ :name => k, :value => v, :domain => host }); a }.to_json

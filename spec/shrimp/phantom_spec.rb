@@ -1,15 +1,18 @@
 #encoding: UTF-8
 require 'spec_helper'
 
-Shrimp.configure do |config|
-  config.rendering_time = 1000
+def valid_pdf(io)
+  case io
+    when File
+      io.read[0...4] == "%PDF"
+    when String
+      io[0...4] == "%PDF" || File.open(io).read[0...4] == "%PDF"
+  end
 end
 
 describe Shrimp::Phantom do
   before do
-    Shrimp.configure do |config|
-      config.rendering_time = 1000
-    end
+    Shrimp.configure { |config| config.rendering_time = 1000 }
   end
 
   it "should initialize attributes" do
@@ -37,13 +40,14 @@ describe Shrimp::Phantom do
 
   describe '#cmd' do
     it "should generate the correct cmd" do
-      phantom = Shrimp::Phantom.new("file://#{test_file}", { :margin => "2cm" }, { }, "#{tmpdir}/test.pdf")
+      phantom = Shrimp::Phantom.new("file://#{test_file}", { :margin => "2cm", :max_redirect_count => 10 }, { }, "#{tmpdir}/test.pdf")
       phantom.cmd.should include "test.pdf A4 1 2cm portrait"
       phantom.cmd.should include "file://#{test_file}"
       phantom.cmd.should include "lib/shrimp/rasterize.js"
+      phantom.cmd.should end_with " 10"
     end
 
-    it "cmd should escape the args" do
+    it "should escape arguments" do
       phantom = Shrimp::Phantom.new("http://example.com/?something")
       phantom.cmd_array.should include "http://example.com/?something"
       phantom.cmd.      should include "http://example.com/\\?something"
@@ -52,11 +56,21 @@ describe Shrimp::Phantom do
       phantom.cmd_array.should include "http://example.com/path/file.html?width=100&height=100"
       phantom.cmd.      should include "http://example.com/path/file.html\\?width\\=100\\&height\\=100"
     end
+
+    it "should properly escape arguments" do
+      malicious_uri = "file:///hello';shutdown"
+      bogus_phantom = Shrimp::Phantom.new(malicious_uri)
+
+      bogus_phantom.cmd.should_not include malicious_uri
+
+      Shrimp.configuration.stub(:phantomjs).and_return "echo"
+      %x(#{bogus_phantom.cmd}).strip.should include malicious_uri
+    end
   end
 
   context "rendering to a file" do
     before(:all) do
-      phantom = Shrimp::Phantom.new("file://#{test_file}", { :margin => "2cm" }, { }, "#{tmpdir}/test.pdf")
+      phantom = Shrimp::Phantom.new("file://#{test_file}", { :margin => "2cm" }, { }, "#{Dir.tmpdir}/test.pdf")
       @result = phantom.to_file
     end
 
@@ -110,7 +124,7 @@ describe Shrimp::Phantom do
       context 'an invalid http: address' do
         subject(:phantom) { Shrimp::Phantom.new("http://example.com/foo/bar") }
         it { @result.should be_nil }
-        its(:error)                 { should eq "404 Unable to load the address!" }
+        its(:error)                 { should eq "Error downloading http://example.com/foo/bar - server replied: Not Found\nUnable to load the page. (HTTP 404) (URL: http://example.com/foo/bar)" }
         its(:page_load_error?)      { should eq true }
         its(:page_load_status_code) { should eq 404 }
       end
@@ -131,7 +145,7 @@ describe Shrimp::Phantom do
         end
         subject(:phantom) { Shrimp::Phantom.new("http://#{local_server_host}/redirect_me") }
         it { @result.should be_nil }
-        its(:error)                 { should eq "302 Unable to load the address!" }
+        its(:error)                 { should eq "Unable to load the page. (HTTP 302) (URL: http://localhost:8800/redirect_me)" }
         its(:page_load_error?)      { should eq true }
         its(:page_load_status_code) { should eq 302 }
         its('response.keys') { should include 'redirectURL' }
@@ -142,7 +156,7 @@ describe Shrimp::Phantom do
       context 'an invalid file: address' do
         subject(:phantom) { Shrimp::Phantom.new("file:///foo/bar") }
         it { @result.should be_nil }
-        its(:error)                 { should eq "null Unable to load the address!" }
+        its(:error)                 { should include "Error opening /foo/bar: No such file or directory\nUnable to load the page. (HTTP null) (URL: file:///foo/bar)" }
         its(:page_load_error?)      { should eq true }
         its(:page_load_status_code) { should eq 'null' }
       end
@@ -150,7 +164,6 @@ describe Shrimp::Phantom do
   end
 
   context "Errors (using bang methods)" do
-
     it "should be unable to load the address" do
       phantom = Shrimp::Phantom.new("file:///foo/bar")
       expect { phantom.run! }.to raise_error Shrimp::RenderingError

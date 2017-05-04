@@ -21,8 +21,9 @@ describe Shrimp::SynchronousMiddleware do
       it { @middleware.send(:render_to).should start_with middleware_options[:out_path] }
       it "should return a 404 status because http://example.org/test does not exist" do
         last_response.status.should eq 404
-        last_response.body.       should eq "404 Unable to load the address!"
-        @middleware.phantom.error.should eq "404 Unable to load the address!"
+        message = "Error downloading http://example.org/test - server replied: Not Found\nUnable to load the page. (HTTP 404) (URL: http://example.org/test)"
+        last_response.body.       should eq message
+        @middleware.phantom.error.should eq message
       end
     end
 
@@ -65,8 +66,8 @@ describe Shrimp::SynchronousMiddleware do
       before {
         phantom = Shrimp::Phantom.new('http://example.org/redirect_me')
         phantom.should_receive(:to_pdf).and_return nil
-        phantom.stub :error => "302 Unable to load the address!",
-                     :redirect_to => "http://localhost:8800/sign_in"
+        phantom.stub :error => "Unable to load the page. (HTTP 302) (URL: http://example.org/redirect_me)",
+                     :redirect_to => "http://example.org/sign_in"
         Shrimp::Phantom.should_receive(:new).and_return phantom
       }
       before { get '/redirect_me.pdf' }
@@ -74,8 +75,8 @@ describe Shrimp::SynchronousMiddleware do
         # This tests the phantomjs_error_response method
         last_response.status.should eq 302
         last_response.headers['Content-Type'].should eq 'text/html'
-        last_response.headers['Location'].should eq "http://#{local_server_host}/sign_in"
-        @middleware.phantom.error. should eq "302 Unable to load the address!"
+        last_response.headers['Location'].should eq "http://example.org/sign_in"
+        @middleware.phantom.error.should include "Unable to load the page"
       end
     end
   end

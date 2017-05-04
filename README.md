@@ -1,5 +1,5 @@
 # Shrimp
-[![Build Status](https://travis-ci.org/adeven/shrimp.png?branch=master)](https://travis-ci.org/adeven/shrimp)
+[![Build Status](https://travis-ci.org/adjust/shrimp.png?branch=master)](https://travis-ci.org/adjust/shrimp)
 Creates PDFs from web pages using PhantomJS
 
 Read our [blog post](http://big-elephants.com/2012-12/pdf-rendering-with-phantomjs/) about how it works.
@@ -80,6 +80,13 @@ Shrimp.configure do |config|
   config.viewport_width  = 600
   config.viewport_height = 600
 
+  # Maximum number of redirects to follow
+  # By default Shrimp does not follow any redirects, which means that if the server responds with
+  # something other than HTTP 200 (for example, 302), an error will be returned. Setting this > 0
+  # causes it to follow that many redirects and only raise an error if the number of redirects exceeds
+  # this.
+  # config.max_redirect_count = 0
+
   # The path to a json configuration file containing command-line options to be used by PhantomJS.
   # Refer to https://github.com/ariya/phantomjs/wiki/API-Reference for a list of valid options.
   # The default options are listed in the Readme.  To use your own file from
@@ -88,7 +95,6 @@ Shrimp.configure do |config|
 
   # Enable if you want to see details such as the phantomjs command line that it's about to execute.
   config.debug = false
-
 end
 ```
 
@@ -168,8 +174,8 @@ config.middleware.use Shrimp::Middleware, {}, :except => ['/secret']
 
 ### Polling
 
-To avoid typing up the web server while waiting for the PDF to be rendered (which could create a
-deadlock) Shrimp::Middleware starts PDF generation in the background in a separate process and
+To avoid tying up the web server while waiting for the PDF to be rendered (which could create a
+deadlock) Shrimp::Middleware starts PDF generation in the background in a separate thread and
 returns a 503 (Service Unavailable) response immediately.
 
 It also adds a [Retry-After](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html) response
@@ -254,7 +260,6 @@ polling the server until it either finishes successfully or returns with a 504 e
     url: url,
     statusCode: statusCodes
   })
-
 ```
 
 ## Contributing

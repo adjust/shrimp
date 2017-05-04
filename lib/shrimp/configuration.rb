@@ -1,4 +1,5 @@
 require 'tmpdir'
+
 module Shrimp
   class Configuration
     def initialize
@@ -14,7 +15,8 @@ module Shrimp
         :viewport_width       => 600,
         :viewport_height      => 600,
         :debug                => false,
-        :thread_safe          => true
+        :thread_safe          => true,
+        :max_redirect_count   => 0
       }
     end
 
@@ -22,7 +24,7 @@ module Shrimp
       @options
     end
 
-    [:format, :margin, :zoom, :orientation, :tmpdir, :rendering_timeout, :rendering_time, :command_config_file, :viewport_width, :viewport_height, :debug, :thread_safe].each do |m|
+    [:format, :margin, :zoom, :orientation, :tmpdir, :rendering_timeout, :rendering_time, :command_config_file, :viewport_width, :viewport_height, :debug, :thread_safe, :max_redirect_count].each do |m|
       define_method("#{m}=") do |val|
         @options[m] = val
       end
