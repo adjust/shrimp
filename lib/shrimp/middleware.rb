@@ -34,9 +34,9 @@ module Shrimp
         else
           delete_tmp_files if already_rendered?
           set_rendering_flag
-          # Start PhantomJS rendering in a separate process and then immediately render a web page
+          # Start PhantomJS rendering in a separate thread and then immediately render a web page
           # that continuously reloads (polls) until the rendering is complete.
-          # Chuck: using Thread.new instead of Process::detach fork because Process fork will cause
+          # Using Thread.new instead of Process::detach fork because Process fork will cause
           # database disconnection when the forked process ended
           Thread.new {
             render_pdf

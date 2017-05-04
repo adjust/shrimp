@@ -66,6 +66,7 @@ describe Shrimp::Phantom do
 
     it "should be a valid pdf" do
       valid_pdf?(@result).should eq true
+      pdf_strings(@result).should eq "Hello\tWorld!"
     end
   end
 
@@ -82,6 +83,7 @@ describe Shrimp::Phantom do
 
     it "should be a valid pdf" do
       valid_pdf?(@result).should eq true
+      pdf_strings(Pathname(@result)).should eq "Hello\tWorld!"
     end
   end
 
@@ -97,6 +99,7 @@ describe Shrimp::Phantom do
 
     it "should be a valid pdf" do
       valid_pdf?(@result).should eq true
+      pdf_strings(@result).should eq "Hello\tWorld!"
     end
   end
 
@@ -152,6 +155,18 @@ describe Shrimp::Phantom do
       phantom = Shrimp::Phantom.new("file:///foo/bar")
       expect { phantom.run! }.to raise_error Shrimp::RenderingError
     end
+  end
 
+  context 'test_file_with_page_numbers.html' do
+    let(:test_file) { super('test_file_with_page_numbers.html') }
+
+    before do
+      phantom = Shrimp::Phantom.new("file://#{test_file}")
+      @result = phantom.to_string("#{tmpdir}/test.pdf")
+    end
+
+    it "PDF should contain page numbers" do
+      pdf_strings(@result).should eq "Header:\tPage\t1/2Footer:\tPage\t1/2Hello\tWorld!Hello\tWorld!Header:\tPage\t2/2Footer:\tPage\t2/2"
+    end
   end
 end

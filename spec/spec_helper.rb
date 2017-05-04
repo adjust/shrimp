@@ -1,6 +1,7 @@
 require 'rack/test'
 require 'shrimp'
 require 'webrick'
+require 'pdf/inspector'
 
 RSpec.configure do |config|
   include Rack::Test::Methods
@@ -19,8 +20,8 @@ def tmpdir
   Shrimp.config.tmpdir
 end
 
-def test_file
-  File.expand_path('../shrimp/test_file.html', __FILE__)
+def test_file(file_name = 'test_file.html')
+  File.expand_path("../shrimp/#{file_name}", __FILE__)
 end
 
 def valid_pdf?(io)
@@ -30,6 +31,9 @@ def valid_pdf?(io)
     when String
       io[0...4] == "%PDF" || File.open(io).read[0...4] == "%PDF"
   end
+end
+def pdf_strings(pdf)
+  PDF::Inspector::Text.analyze(pdf).strings.join
 end
 
 # Used by rack-test when we call get

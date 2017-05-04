@@ -204,6 +204,26 @@ to the middleware:
 To disable this caching entirely and force it to re-generate the PDF again each time a request comes
 in, set `cache_ttl` to 0.
 
+### Header/Footer
+
+You can specify a header or footer callback, which can even include page numbers. Example:
+
+```html
+  <head>
+    <script type="text/javascript">
+      var PhantomJSPrinting = {
+        header: {
+            height: "1cm",
+            contents: function(pageNum, numPages) { return "Page " + pageNum + "/" + numPages; }
+        },
+        footer: {
+            height: "1cm",
+            contents: function(pageNum, numPages) { return "Page " + pageNum + "/" + numPages; }
+        }
+      };
+    </script>
+  </head>
+```
 
 ### Ajax requests
 
