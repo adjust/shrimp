@@ -5,7 +5,7 @@ require 'shellwords'
 module Shrimp
   class NoExecutableError < StandardError
     def initialize
-      msg = "No phantomjs executable found at #{Shrimp.configuration.phantomjs}\n"
+      msg = "No phantomjs executable found at #{Shrimp.config.phantomjs}\n"
       msg << ">> Please install phantomjs - http://phantomjs.org/download.html"
       super(msg)
     end
@@ -25,35 +25,75 @@ module Shrimp
 
   class Phantom
     attr_accessor :source, :configuration, :outfile
-    attr_reader :options, :cookies, :result, :error
+    attr_reader :options, :cookies, :result, :error, :response, :response_headers
     SCRIPT_FILE = File.expand_path('../rasterize.js', __FILE__)
 
     # Public: Runs the phantomjs binary
     #
-    # Returns the stdout output of phantomjs
+    # Returns the stdout output from phantomjs
     def run
       @error  = nil
+      puts "Running command: #{cmd}" if options[:debug]
       @result = `#{cmd}`
+      if match = @result.match(response_line_regexp)
+        @response = JSON.parse match[1]
+        @response_headers = @response['headers'].inject({}) {|hash, header|
+          hash[header['name']] = header['value']; hash
+        }
+        @result.gsub! response_line_regexp, ''
+      end
       unless $?.exitstatus == 0
-        @error  = @result
+        @error  = @result.chomp
         @result = nil
       end
       @result
     end
 
     def run!
-      @error  = nil
-      @result = `#{cmd}`
-      unless $?.exitstatus == 0
-        @error  = @result
-        @result = nil
-        raise RenderingError.new(@error)
-      end
-      @result
+      run.tap {
+        raise RenderingError.new(error) if error?
+      }
     end
 
-    # Public: Returns the phantom rasterize command
+    def response_line_regexp
+      /^response: (.*)$\n?/
+    end
+    def redirect?
+      page_load_status_code == 302
+    end
+    def redirect_to
+      return unless redirect?
+      response['redirectURL'] if response
+    end
+
+    def error?
+      !!error
+    end
+
+    def match_page_load_error
+      error.to_s.match /^.* \(HTTP (null|\S+)\).*/
+    end
+    def page_load_error?
+      !!match_page_load_error
+    end
+    def page_load_status_code
+      if match = match_page_load_error
+        status_code = match[1].to_s
+        if status_code =~ /\A\d+\Z/
+          status_code.to_i
+        else
+          status_code
+        end
+      end
+    end
+
+    # Public: Returns the arguments for the PhantomJS rasterize command as a shell-escaped string
     def cmd
+      Shellwords.join cmd_array
+    end
+
+    # Public: Returns the arguments for the PhantomJS rasterize command as an array
+    def cmd_array
       cookie_file                       = dump_cookies
       format, zoom, margin, orientation = options[:format], options[:zoom], options[:margin], options[:orientation]
       rendering_time, timeout           = options[:rendering_time], options[:rendering_timeout]
@@ -65,7 +105,7 @@ module Shrimp
         Shrimp.configuration.phantomjs,
         command_config_file,
         SCRIPT_FILE,
-        @source.to_s.shellescape,
+        @source.to_s,
         @outfile,
         format,
         zoom,
@@ -77,7 +117,7 @@ module Shrimp
         viewport_width,
         viewport_height,
         max_redirect_count
-      ].join(" ")
+      ].map(&:to_s)
     end
 
     # Public: initializes a new Phantom Object
@@ -94,10 +134,10 @@ module Shrimp
     # Returns self
     def initialize(url_or_file, options = { }, cookies={ }, outfile = nil)
       @source  = Source.new(url_or_file)
-      @options = Shrimp.configuration.default_options.merge(options)
+      @options = Shrimp.config.to_h.merge(options)
       @cookies = cookies
       @outfile = File.expand_path(outfile) if outfile
-      raise NoExecutableError.new unless File.exists?(Shrimp.configuration.phantomjs)
+      raise NoExecutableError.new unless File.exists?(Shrimp.config.phantomjs)
     end
 
     # Public: renders to pdf

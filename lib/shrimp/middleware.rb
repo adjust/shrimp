@@ -1,76 +1,65 @@
+require 'shrimp/base_middleware'
+
 module Shrimp
-  class Middleware
+  class Middleware < BaseMiddleware
     def initialize(app, options = { }, conditions = { })
-      @app                        = app
-      @options                    = options
-      @conditions                 = conditions
+      super
       @options[:polling_interval] ||= 1
       @options[:polling_offset]   ||= 1
       @options[:cache_ttl]        ||= 1
       @options[:request_timeout]  ||= @options[:polling_interval] * 10
     end
 
-    def call(env)
-      @request = Rack::Request.new(env)
-      if render_as_pdf? #&& headers['Content-Type'] =~ /text\/html|application\/xhtml\+xml/
-        if already_rendered? && (up_to_date?(@options[:cache_ttl]) || @options[:cache_ttl] == 0)
-          if File.size(render_to) == 0
-            File.delete(render_to)
-            remove_rendering_flag
-            return error_response
-          end
-          return ready_response if env['HTTP_X_REQUESTED_WITH']
-          file = File.open(render_to, "rb")
-          body = file.read
-          file.close
-          File.delete(render_to) if @options[:cache_ttl] == 0
+    def render_as_pdf(env)
+      if already_rendered? && (up_to_date?(@options[:cache_ttl]) || @options[:cache_ttl] == 0)
+        if File.size(render_to) == 0
+          delete_tmp_files
           remove_rendering_flag
-          response                  = [body]
-          headers                   = { }
-          headers["Content-Length"] = (body.respond_to?(:bytesize) ? body.bytesize : body.size).to_s
-          headers["Content-Type"]   = "application/pdf"
-          [200, headers, response]
-        else
-          if rendering_in_progress?
-            if rendering_timed_out?
-              remove_rendering_flag
-              error_response
-            else
-              reload_response(@options[:polling_interval])
-            end
-          else
-            File.delete(render_to) if already_rendered?
-            set_rendering_flag
-            fire_phantom
-            reload_response(@options[:polling_offset])
-          end
+          return error_response
         end
+        return ready_response if env['HTTP_X_REQUESTED_WITH']
+        body = pdf_body()
+        delete_tmp_files if @options[:cache_ttl] == 0
+        remove_rendering_flag
+        headers = pdf_headers(body)
+        [200, headers, [body]]
       else
-        @app.call(env)
+        if rendering_in_progress?
+          if rendering_timed_out?
+            remove_rendering_flag
+            error_response
+          else
+            reload_response(@options[:polling_interval])
+          end
+        else
+          delete_tmp_files if already_rendered?
+          set_rendering_flag
+          # Start PhantomJS rendering in a separate thread and then immediately render a web page
+          # that continuously reloads (polls) until the rendering is complete.
+          # Using Thread.new instead of Process::detach fork because Process fork will cause
+          # database disconnection when the forked process ended
+          Thread.new {
+            render_pdf
+          }
+          reload_response(@options[:polling_offset])
+        end
       end
     end
 
     private
 
-    # Private: start phantom rendering in a separate process
-    def fire_phantom
-      Process::detach fork { Phantom.new(@request.url.sub(%r{\.pdf$}, ''), @options, @request.cookies).to_pdf(render_to) }
-    end
-
-    def render_to
-      file_name = Digest::MD5.hexdigest(@request.path) + ".pdf"
-      file_path = @options[:out_path]
-      "#{file_path}/#{file_name}"
-    end
-
     def already_rendered?
-      File.exists?(render_to)
+      File.exists?(render_to_done) && File.exists?(render_to)
     end
 
     def up_to_date?(ttl = 30)
       (Time.now - File.new(render_to).mtime) <= ttl
     end
 
+    def delete_tmp_files
+      File.delete(render_to)
+      File.delete(render_to_done)
+    end
 
     def remove_rendering_flag
       @request.session["phantom-rendering"] ||={ }
@@ -82,45 +71,19 @@ module Shrimp
       @request.session["phantom-rendering"][render_to] = Time.now
     end
 
+    def rendering_started_at
+      @request.session["phantom-rendering"][render_to].to_time
+    end
+
     def rendering_timed_out?
-      Time.now - @request.session["phantom-rendering"][render_to] > @options[:request_timeout]
+      Time.now - rendering_started_at > @options[:request_timeout]
     end
 
     def rendering_in_progress?
-      @request.session["phantom-rendering"]||={ }
-      @request.session["phantom-rendering"][render_to]
+      @request.session["phantom-rendering"] ||={ }
+      !!@request.session["phantom-rendering"][render_to]
     end
 
-    def render_as_pdf?
-      request_path_is_pdf = !!@request.path.match(%r{\.pdf$})
-
-      if request_path_is_pdf && @conditions[:only]
-        rules = [@conditions[:only]].flatten
-        rules.any? do |pattern|
-          if pattern.is_a?(Regexp)
-            @request.path =~ pattern
-          else
-            @request.path[0, pattern.length] == pattern
-          end
-        end
-      elsif request_path_is_pdf && @conditions[:except]
-        rules = [@conditions[:except]].flatten
-        rules.map do |pattern|
-          if pattern.is_a?(Regexp)
-            return false if @request.path =~ pattern
-          else
-            return false if @request.path[0, pattern.length] == pattern
-          end
-        end
-        return true
-      else
-        request_path_is_pdf
-      end
-    end
-
-    def concat(accepts, type)
-      (accepts || '').split(',').unshift(type).compact.join(',')
-    end
 
     def reload_response(interval=1)
       body = <<-HTML.gsub(/[ \n]+/, ' ').strip
@@ -128,7 +91,7 @@ module Shrimp
           <head>
         </head>
           <body onLoad="setTimeout(function(){ window.location.reload()}, #{interval * 1000});">
-          <h2>Preparing pdf... </h2>
+          <h2>Preparing PDF file.  Please wait... </h2>
           </body>
         </ html>
       HTML
@@ -146,7 +109,7 @@ module Shrimp
         <head>
         </head>
         <body>
-        <a href="#{@request.path}">PDF ready here</a>
+        <a href="#{@request.path}">PDF file ready here</a>
         </body>
       </ html>
       HTML
@@ -162,7 +125,7 @@ module Shrimp
         <head>
         </head>
         <body>
-        <h2>Sorry request timed out... </h2>
+        <h2>Sorry, the request timed out.</h2>
         </body>
       </ html>
       HTML

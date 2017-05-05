@@ -1,0 +1,21 @@
+<html>
+  <head>
+    <script type="text/javascript">
+      var PhantomJSPrinting = {
+        header: {
+            height: "1cm",
+            contents: function(pageNum, numPages) { return "Header: Page " + pageNum + "/" + numPages; }
+        },
+        footer: {
+            height: "1cm",
+            contents: function(pageNum, numPages) { return "Footer: Page " + pageNum + "/" + numPages; }
+        }
+      };
+    </script>
+  </head>
+  <body>
+      <h1 style="margin-bottom: 20em";>Hello World!</h1>
+      <h1 style="margin-bottom: 20em";>Hello World!</h1>
+  </body>
+</html>
+
